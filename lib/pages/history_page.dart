@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:randomlottonumber/data/num_history_lists.dart';
-import 'package:randomlottonumber/style.dart';
+import 'package:randomlottonumber/theme/app_colors.dart';
 import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
 class HistoryPage extends StatelessWidget {
@@ -12,14 +12,14 @@ class HistoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           '역대 당첨번호',
           style: TextStyle(color: blackColor),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: blackColor),
+        iconTheme: const IconThemeData(color: blackColor),
       ),
       backgroundColor: whiteColor,
       body: Padding(
@@ -50,7 +50,7 @@ class HistoryPage extends StatelessWidget {
                 children: [
                   Text(
                     '제 ${historyNumberLists.length - index} 회 당첨번호',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       color: blackColor,
                     ),
@@ -65,7 +65,7 @@ class HistoryPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
+                      const Text(
                         '+',
                         style: TextStyle(
                           fontSize: 18,

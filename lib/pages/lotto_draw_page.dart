@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:randomlottonumber/pages/history_page.dart';
-import 'package:randomlottonumber/style.dart';
+import 'package:randomlottonumber/theme/app_colors.dart';
 import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
 class LottoDrawPage extends StatefulWidget {
@@ -44,7 +44,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mainColor,
-        title: Text(
+        title: const Text(
           'App Title',
           style: TextStyle(
             fontWeight: FontWeight.w700,
@@ -61,7 +61,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
                 ),
               );
             },
-            child: Text(
+            child: const Text(
               '당첨번호 조회',
               style: TextStyle(
                 color: whiteColor,
@@ -112,7 +112,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
                   borderRadius: BorderRadius.circular(4),
                   color: mainColor,
                 ),
-                child: Center(
+                child: const Center(
                   child: Text(
                     '번호 추출하기',
                     style: TextStyle(

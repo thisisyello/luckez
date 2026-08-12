@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/style.dart';
+import 'package:randomlottonumber/theme/app_colors.dart';
 
 class LottoBall extends StatelessWidget {
   const LottoBall({
@@ -20,10 +20,10 @@ class LottoBall extends StatelessWidget {
           child: Container(
             width: ballSize,
             height: ballSize,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: whiteColor,
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 6,
