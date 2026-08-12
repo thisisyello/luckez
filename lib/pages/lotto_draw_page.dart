@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:randomlottonumber/pages/history_page.dart';
 import 'package:randomlottonumber/style.dart';
+import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
 class LottoDrawPage extends StatefulWidget {
   const LottoDrawPage({super.key});
@@ -16,7 +17,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
 
   void generateLottoNumbers() {
     Random random = Random();
-    Set<int> uniqueNumbers = Set();
+    Set<int> uniqueNumbers = <int>{};
 
     while (uniqueNumbers.length < 6) {
       int newNumber = random.nextInt(45) + 1;
@@ -53,12 +54,12 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
         actions: [
           TextButton(
             onPressed: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => const AboutWinningNumPage(),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HistoryPage(),
+                ),
+              );
             },
             child: Text(
               '당첨번호 조회',
@@ -83,128 +84,16 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
                   maxWidth: 500,
                 ),
                 child: Row(
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          height: 80,
-                          color: blackColor,
-                          child: Center(
-                            child: Text(
-                              '${lottoNumbers[0]}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                // color: open ? whiteColor : blackColor,
-                                color: lottoNumbers[0] < 11 ? num0Color : lottoNumbers[0] < 21 ? num10Color : lottoNumbers[0] < 31 ? num20Color  : lottoNumbers[0] < 41 ? num30Color : num40Color,
-                              ),
-                            ),
+                  children: lottoNumbers
+                      .map(
+                        (number) => Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: LottoBall(number: number),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          height: 80,
-                          color: blackColor,
-                          child: Center(
-                            child: Text(
-                              '${lottoNumbers[1]}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                // color: open ? whiteColor : blackColor,
-                                color: lottoNumbers[1] < 11 ? num0Color : lottoNumbers[1] < 21 ? num10Color : lottoNumbers[1] < 31 ? num20Color  : lottoNumbers[1] < 41 ? num30Color : num40Color,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          height: 80,
-                          color: blackColor,
-                          child: Center(
-                            child: Text(
-                              '${lottoNumbers[2]}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                // color: open ? whiteColor : blackColor,
-                                color: lottoNumbers[2] < 11 ? num0Color : lottoNumbers[2] < 21 ? num10Color : lottoNumbers[2] < 31 ? num20Color  : lottoNumbers[2] < 41 ? num30Color : num40Color,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          height: 80,
-                          color: blackColor,
-                          child: Center(
-                            child: Text(
-                              '${lottoNumbers[3]}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                // color: open ? whiteColor : blackColor,
-                                color: lottoNumbers[3] < 11 ? num0Color : lottoNumbers[3] < 21 ? num10Color : lottoNumbers[3] < 31 ? num20Color  : lottoNumbers[3] < 41 ? num30Color : num40Color,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          height: 80,
-                          color: blackColor,
-                          child: Center(
-                            child: Text(
-                              '${lottoNumbers[4]}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                // color: open ? whiteColor : blackColor,
-                                color: lottoNumbers[4] < 11 ? num0Color : lottoNumbers[4] < 21 ? num10Color : lottoNumbers[4] < 31 ? num20Color  : lottoNumbers[4] < 41 ? num30Color : num40Color,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Container(
-                          height: 80,
-                          color: blackColor,
-                          child: Center(
-                            child: Text(
-                              '${lottoNumbers[5]}',
-                              style: TextStyle(
-                                fontSize: 32,
-                                // color: open ? whiteColor : blackColor,
-                                color: lottoNumbers[5] < 11 ? num0Color : lottoNumbers[5] < 21 ? num10Color : lottoNumbers[5] < 31 ? num20Color  : lottoNumbers[5] < 41 ? num30Color : num40Color,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                      )
+                      .toList(),
                 ),
               ),
             ),

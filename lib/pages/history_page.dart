@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:randomlottonumber/data/num_history_lists.dart';
 import 'package:randomlottonumber/style.dart';
+import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
 class HistoryPage extends StatelessWidget {
   const HistoryPage({super.key});
@@ -81,27 +82,6 @@ class HistoryPage extends StatelessWidget {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class HistoryNumberBall extends StatelessWidget {
-  const HistoryNumberBall({
-    super.key,
-    required this.number,
-  });
-
-  final int number;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      '$number',
-      style: TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
-        color: getTextColor(number),
       ),
     );
   }
