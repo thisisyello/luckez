@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/data/num_history_lists.dart';
+import 'package:randomlottonumber/data/num_history_mock.dart';
 import 'package:randomlottonumber/theme/app_colors.dart';
 import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
