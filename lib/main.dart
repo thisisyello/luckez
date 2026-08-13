@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/pages/lotto_draw_page.dart';
+import 'package:randomlottonumber/shell/main_shell_page.dart';
 
 void main() {
   runApp(const LuckezApp());
@@ -12,7 +12,7 @@ class LuckezApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const LottoDrawPage(),
+      home: const MainShellPage(),
       theme: ThemeData(
         fontFamily: 'Pretendard',
       ),
