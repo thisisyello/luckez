@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:randomlottonumber/models/saved_lotto_number.dart';
 import 'package:randomlottonumber/theme/app_colors.dart';
 import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
@@ -13,6 +14,7 @@ class LottoDrawPage extends StatefulWidget {
 
 class _LottoDrawPageState extends State<LottoDrawPage> {
   List<int> lottoNumbers = [];
+  final List<SavedLottoNumber> savedNumbers = [];
 
   void generateLottoNumbers() {
     Random random = Random();
@@ -29,10 +31,21 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
     });
   }
 
-  void showSaveComingSoonMessage() {
+  void saveCurrentLottoNumbers() {
+    final now = DateTime.now();
+    final savedNumber = SavedLottoNumber(
+      id: now.microsecondsSinceEpoch.toString(),
+      numbers: List<int>.from(lottoNumbers),
+      createdAt: now,
+    );
+
+    setState(() {
+      savedNumbers.add(savedNumber);
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('번호 저장 기능 준비 중'),
+        content: Text('번호를 저장했어요'),
         duration: Duration(seconds: 1),
       ),
     );
@@ -96,7 +109,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: showSaveComingSoonMessage,
+                    onPressed: saveCurrentLottoNumbers,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: mainColor,
                       foregroundColor: whiteColor,
@@ -112,11 +125,11 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
               ],
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(top: 16),
+          Padding(
+            padding: const EdgeInsets.only(top: 16),
             child: Text(
-              '저장한 번호 0개',
-              style: TextStyle(
+              '저장한 번호 ${savedNumbers.length}개',
+              style: const TextStyle(
                 color: greyColor,
                 fontSize: 14,
               ),
