@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:randomlottonumber/models/saved_lotto_number.dart';
 import 'package:randomlottonumber/pages/community_page.dart';
 import 'package:randomlottonumber/pages/lotto_draw_page.dart';
 import 'package:randomlottonumber/pages/my_numbers_page.dart';
@@ -15,14 +16,27 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   int selectedIndex = 0;
+  final List<SavedLottoNumber> savedNumbers = [];
 
-  final pages = const [
-    LottoDrawPage(),
-    StatsPage(),
-    PurchasePage(),
-    MyNumbersPage(),
-    CommunityPage(),
-  ];
+  void saveLottoNumbers(List<int> numbers) {
+    final now = DateTime.now();
+    final savedNumber = SavedLottoNumber(
+      id: now.microsecondsSinceEpoch.toString(),
+      numbers: List<int>.from(numbers),
+      createdAt: now,
+    );
+
+    setState(() {
+      savedNumbers.add(savedNumber);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('번호를 저장했어요'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +45,16 @@ class _MainShellPageState extends State<MainShellPage> {
       appBar: _buildAppBar(context),
       body: IndexedStack(
         index: selectedIndex,
-        children: pages,
+        children: [
+          LottoDrawPage(
+            savedNumbersCount: savedNumbers.length,
+            onSaveNumbers: saveLottoNumbers,
+          ),
+          const StatsPage(),
+          const PurchasePage(),
+          MyNumbersPage(savedNumbers: savedNumbers),
+          const CommunityPage(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,

@@ -1,12 +1,18 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/models/saved_lotto_number.dart';
 import 'package:randomlottonumber/theme/app_colors.dart';
 import 'package:randomlottonumber/widgets/lotto_ball.dart';
 
 class LottoDrawPage extends StatefulWidget {
-  const LottoDrawPage({super.key});
+  const LottoDrawPage({
+    super.key,
+    required this.savedNumbersCount,
+    required this.onSaveNumbers,
+  });
+
+  final int savedNumbersCount;
+  final ValueChanged<List<int>> onSaveNumbers;
 
   @override
   State<LottoDrawPage> createState() => _LottoDrawPageState();
@@ -14,7 +20,6 @@ class LottoDrawPage extends StatefulWidget {
 
 class _LottoDrawPageState extends State<LottoDrawPage> {
   List<int> lottoNumbers = [];
-  final List<SavedLottoNumber> savedNumbers = [];
 
   void generateLottoNumbers() {
     Random random = Random();
@@ -32,23 +37,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
   }
 
   void saveCurrentLottoNumbers() {
-    final now = DateTime.now();
-    final savedNumber = SavedLottoNumber(
-      id: now.microsecondsSinceEpoch.toString(),
-      numbers: List<int>.from(lottoNumbers),
-      createdAt: now,
-    );
-
-    setState(() {
-      savedNumbers.add(savedNumber);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('번호를 저장했어요'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    widget.onSaveNumbers(lottoNumbers);
   }
 
   @override
@@ -128,7 +117,7 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: Text(
-              '저장한 번호 ${savedNumbers.length}개',
+              '저장한 번호 ${widget.savedNumbersCount}개',
               style: const TextStyle(
                 color: greyColor,
                 fontSize: 14,
