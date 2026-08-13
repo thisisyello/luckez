@@ -6,18 +6,9 @@ class PurchasePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: whiteColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          '구매',
-          style: TextStyle(color: blackColor),
-        ),
-      ),
-      body: const Center(
+    return const ColoredBox(
+      color: whiteColor,
+      child: Center(
         child: Text(
           '구매 연결 준비 중',
           style: TextStyle(

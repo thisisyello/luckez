@@ -27,6 +27,8 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: whiteColor,
+      appBar: _buildAppBar(context),
       body: IndexedStack(
         index: selectedIndex,
         children: pages,
@@ -66,6 +68,35 @@ class _MainShellPageState extends State<MainShellPage> {
             label: '커뮤니티',
           ),
         ],
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.person_outline),
+        color: blackColor,
+        onPressed: () => _showComingSoonMessage('마이페이지 준비 중'),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_none),
+          color: blackColor,
+          onPressed: () => _showComingSoonMessage('알림 기능 준비 중'),
+        ),
+        const SizedBox(width: 8),
+      ],
+    );
+  }
+
+  void _showComingSoonMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 1),
       ),
     );
   }

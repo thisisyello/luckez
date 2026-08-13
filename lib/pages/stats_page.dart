@@ -6,18 +6,9 @@ class StatsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: whiteColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: const Text(
-          '통계',
-          style: TextStyle(color: blackColor),
-        ),
-      ),
-      body: const Center(
+    return const ColoredBox(
+      color: whiteColor,
+      child: Center(
         child: Text(
           '통계 화면 준비 중',
           style: TextStyle(
