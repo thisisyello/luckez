@@ -29,13 +29,19 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
     });
   }
 
-  bool open = false;
+  void showSaveComingSoonMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('번호 저장 기능 준비 중'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
 
   @override
   void initState() {
     super.initState();
     generateLottoNumbers();
-    // print(allHistoryNumbers);
   }
 
   @override
@@ -68,30 +74,51 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
               ),
             ),
           ),
-          InkWell(
-            onTap: () {
-              setState(() {
-                open = true;
-              });
-              generateLottoNumbers();
-              // print(lottoNumbers);//////
-            },
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              width: 160,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                color: mainColor,
-              ),
-              child: const Center(
-                child: Text(
-                  '번호 추출하기',
-                  style: TextStyle(
-                    fontSize: 20,
-                    // fontWeight: FontWeight.bold,
-                    color: whiteColor,
+          const SizedBox(height: 24),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: generateLottoNumbers,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: mainColor,
+                      side: const BorderSide(color: mainColor),
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('다시 추첨'),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: showSaveComingSoonMessage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: mainColor,
+                      foregroundColor: whiteColor,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('저장하기'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(top: 16),
+            child: Text(
+              '저장한 번호 0개',
+              style: TextStyle(
+                color: greyColor,
+                fontSize: 14,
               ),
             ),
           ),
