@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:randomlottonumber/constants/lotto_round.dart';
+import 'package:randomlottonumber/models/lotto_round_info.dart';
 import 'package:randomlottonumber/models/saved_lotto_number.dart';
 import 'package:randomlottonumber/pages/community_page.dart';
 import 'package:randomlottonumber/pages/lotto_draw_page.dart';
@@ -16,6 +18,10 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   int selectedIndex = 0;
+  LottoRoundInfo roundInfo = const LottoRoundInfo(
+    activeRound: initialActiveRound,
+    latestDrawRound: initialLatestDrawRound,
+  );
   final List<SavedLottoNumber> savedNumbers = [];
 
   void saveLottoNumbers(List<int> numbers) {
@@ -24,6 +30,7 @@ class _MainShellPageState extends State<MainShellPage> {
       id: now.microsecondsSinceEpoch.toString(),
       numbers: List<int>.from(numbers),
       createdAt: now,
+      round: roundInfo.activeRound,
     );
 
     setState(() {
@@ -52,7 +59,10 @@ class _MainShellPageState extends State<MainShellPage> {
           ),
           const StatsPage(),
           const PurchasePage(),
-          MyNumbersPage(savedNumbers: savedNumbers),
+          MyNumbersPage(
+            savedNumbers: savedNumbers,
+            activeRound: roundInfo.activeRound,
+          ),
           const CommunityPage(),
         ],
       ),
