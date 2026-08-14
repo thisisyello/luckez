@@ -1,3 +1,5 @@
+import 'package:randomlottonumber/models/lotto_result_status.dart';
+
 class SavedLottoNumber {
   const SavedLottoNumber({
     required this.id,
@@ -6,6 +8,7 @@ class SavedLottoNumber {
     this.updatedAt,
     this.round,
     this.isPurchased = false,
+    this.resultStatus = LottoResultStatus.pending,
   });
 
   final String id;
@@ -14,6 +17,7 @@ class SavedLottoNumber {
   final DateTime? updatedAt;
   final int? round;
   final bool isPurchased;
+  final LottoResultStatus resultStatus;
 
   SavedLottoNumber copyWith({
     String? id,
@@ -22,6 +26,7 @@ class SavedLottoNumber {
     DateTime? updatedAt,
     int? round,
     bool? isPurchased,
+    LottoResultStatus? resultStatus,
   }) {
     return SavedLottoNumber(
       id: id ?? this.id,
@@ -30,6 +35,7 @@ class SavedLottoNumber {
       updatedAt: updatedAt ?? this.updatedAt,
       round: round ?? this.round,
       isPurchased: isPurchased ?? this.isPurchased,
+      resultStatus: resultStatus ?? this.resultStatus,
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:randomlottonumber/models/lotto_result_status.dart';
 import 'package:randomlottonumber/models/saved_lotto_number.dart';
 import 'package:randomlottonumber/theme/app_colors.dart';
 import 'package:randomlottonumber/widgets/lotto_ball.dart';
@@ -246,7 +247,7 @@ class _SavedNumbersList extends StatelessWidget {
               const SizedBox(height: 16),
               Center(
                 child: Text(
-                  _formatCreatedAt(savedNumber.createdAt),
+                  '${_resultStatusLabel(savedNumber.resultStatus)} · ${_formatCreatedAt(savedNumber.createdAt)}',
                   style: const TextStyle(
                     color: greyColor,
                     fontSize: 12,
@@ -283,6 +284,25 @@ class _SavedNumbersList extends StatelessWidget {
 
     if (shouldDelete == true) {
       onDeleteSavedNumber(id);
+    }
+  }
+
+  String _resultStatusLabel(LottoResultStatus status) {
+    switch (status) {
+      case LottoResultStatus.pending:
+        return '추첨 전';
+      case LottoResultStatus.notWon:
+        return '낙첨';
+      case LottoResultStatus.fifth:
+        return '5등';
+      case LottoResultStatus.fourth:
+        return '4등';
+      case LottoResultStatus.third:
+        return '3등';
+      case LottoResultStatus.second:
+        return '2등';
+      case LottoResultStatus.first:
+        return '1등';
     }
   }
 
