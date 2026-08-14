@@ -45,6 +45,37 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
+  void togglePurchased(String id) {
+    final index =
+        savedNumbers.indexWhere((savedNumber) => savedNumber.id == id);
+
+    if (index == -1) {
+      return;
+    }
+
+    final savedNumber = savedNumbers[index];
+
+    setState(() {
+      savedNumbers[index] = savedNumber.copyWith(
+        isPurchased: !savedNumber.isPurchased,
+        updatedAt: DateTime.now(),
+      );
+    });
+  }
+
+  void deleteSavedNumber(String id) {
+    setState(() {
+      savedNumbers.removeWhere((savedNumber) => savedNumber.id == id);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('저장한 번호를 삭제했어요'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,6 +93,8 @@ class _MainShellPageState extends State<MainShellPage> {
           MyNumbersPage(
             savedNumbers: savedNumbers,
             activeRound: roundInfo.activeRound,
+            onTogglePurchased: togglePurchased,
+            onDeleteSavedNumber: deleteSavedNumber,
           ),
           const CommunityPage(),
         ],

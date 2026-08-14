@@ -8,10 +8,14 @@ class MyNumbersPage extends StatefulWidget {
     super.key,
     required this.savedNumbers,
     required this.activeRound,
+    required this.onTogglePurchased,
+    required this.onDeleteSavedNumber,
   });
 
   final List<SavedLottoNumber> savedNumbers;
   final int activeRound;
+  final ValueChanged<String> onTogglePurchased;
+  final ValueChanged<String> onDeleteSavedNumber;
 
   @override
   State<MyNumbersPage> createState() => _MyNumbersPageState();
@@ -58,7 +62,7 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
         .toList();
 
     return ColoredBox(
-      color: whiteColor,
+      color: const Color(0xffF7F7F8),
       child: Column(
         children: [
           Padding(
@@ -83,6 +87,8 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
             child: _SavedNumbersList(
               savedNumbers: selectedRoundNumbers,
               emptyMessage: '$selectedRound회에 저장한 번호가 없습니다',
+              onTogglePurchased: widget.onTogglePurchased,
+              onDeleteSavedNumber: widget.onDeleteSavedNumber,
             ),
           ),
         ],
@@ -141,10 +147,14 @@ class _SavedNumbersList extends StatelessWidget {
   const _SavedNumbersList({
     required this.savedNumbers,
     required this.emptyMessage,
+    required this.onTogglePurchased,
+    required this.onDeleteSavedNumber,
   });
 
   final List<SavedLottoNumber> savedNumbers;
   final String emptyMessage;
+  final ValueChanged<String> onTogglePurchased;
+  final ValueChanged<String> onDeleteSavedNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -174,24 +184,51 @@ class _SavedNumbersList extends StatelessWidget {
           decoration: BoxDecoration(
             color: whiteColor,
             borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color:
+                  savedNumber.isPurchased ? mainColor : const Color(0xffEEEEEE),
+              width: savedNumber.isPurchased ? 1.4 : 1,
+            ),
             boxShadow: const [
               BoxShadow(
-                color: Colors.black12,
-                blurRadius: 8,
-                offset: Offset(0, 3),
+                color: Color(0x14000000),
+                blurRadius: 14,
+                offset: Offset(0, 6),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                '저장 번호 ${savedNumbers.length - index}',
-                style: const TextStyle(
-                  color: blackColor,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: savedNumber.isPurchased,
+                      activeColor: mainColor,
+                      onChanged: (_) => onTogglePurchased(savedNumber.id),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '구매 완료',
+                    style: TextStyle(
+                      color: blackColor,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => _confirmDelete(
+                      context,
+                      savedNumber.id,
+                    ),
+                    icon: const Icon(Icons.delete_outline),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
               Row(
@@ -206,12 +243,14 @@ class _SavedNumbersList extends StatelessWidget {
                     )
                     .toList(),
               ),
-              const SizedBox(height: 14),
-              Text(
-                _formatCreatedAt(savedNumber.createdAt),
-                style: const TextStyle(
-                  color: greyColor,
-                  fontSize: 12,
+              const SizedBox(height: 16),
+              Center(
+                child: Text(
+                  _formatCreatedAt(savedNumber.createdAt),
+                  style: const TextStyle(
+                    color: greyColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -219,6 +258,32 @@ class _SavedNumbersList extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, String id) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('저장한 번호 삭제'),
+          content: const Text('이 번호를 삭제할까요?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('삭제'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete == true) {
+      onDeleteSavedNumber(id);
+    }
   }
 
   String _formatCreatedAt(DateTime createdAt) {
