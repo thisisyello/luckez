@@ -108,6 +108,36 @@ class _MainShellPageState extends State<MainShellPage> {
     });
   }
 
+  void updateSavedNumbers(String id, List<int> numbers) {
+    final index =
+        savedNumbers.indexWhere((savedNumber) => savedNumber.id == id);
+
+    if (index == -1) {
+      return;
+    }
+
+    final now = DateTime.now();
+    final savedNumber = savedNumbers[index].copyWith(
+      numbers: List<int>.from(numbers)..sort(),
+      updatedAt: now,
+    );
+    final updatedSavedNumber = _applyWinningResult(
+      savedNumber,
+      checkedAt: now,
+    );
+
+    setState(() {
+      savedNumbers[index] = updatedSavedNumber;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('저장한 번호를 수정했어요'),
+        duration: Duration(seconds: 1),
+      ),
+    );
+  }
+
   void deleteSavedNumber(String id) {
     setState(() {
       savedNumbers.removeWhere((savedNumber) => savedNumber.id == id);
@@ -139,6 +169,7 @@ class _MainShellPageState extends State<MainShellPage> {
             savedNumbers: savedNumbers,
             activeRound: roundInfo.activeRound,
             onTogglePurchased: togglePurchased,
+            onUpdateSavedNumbers: updateSavedNumbers,
             onDeleteSavedNumber: deleteSavedNumber,
           ),
           const CommunityPage(),
