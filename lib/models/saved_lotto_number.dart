@@ -9,6 +9,9 @@ class SavedLottoNumber {
     this.round,
     this.isPurchased = false,
     this.resultStatus = LottoResultStatus.pending,
+    this.matchCount,
+    this.isBonusMatched,
+    this.checkedAt,
   });
 
   final String id;
@@ -18,6 +21,9 @@ class SavedLottoNumber {
   final int? round;
   final bool isPurchased;
   final LottoResultStatus resultStatus;
+  final int? matchCount;
+  final bool? isBonusMatched;
+  final DateTime? checkedAt;
 
   SavedLottoNumber copyWith({
     String? id,
@@ -27,6 +33,9 @@ class SavedLottoNumber {
     int? round,
     bool? isPurchased,
     LottoResultStatus? resultStatus,
+    int? matchCount,
+    bool? isBonusMatched,
+    DateTime? checkedAt,
   }) {
     return SavedLottoNumber(
       id: id ?? this.id,
@@ -36,6 +45,9 @@ class SavedLottoNumber {
       round: round ?? this.round,
       isPurchased: isPurchased ?? this.isPurchased,
       resultStatus: resultStatus ?? this.resultStatus,
+      matchCount: matchCount ?? this.matchCount,
+      isBonusMatched: isBonusMatched ?? this.isBonusMatched,
+      checkedAt: checkedAt ?? this.checkedAt,
     );
   }
 }

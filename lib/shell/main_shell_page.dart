@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:randomlottonumber/constants/lotto_round.dart';
+import 'package:randomlottonumber/data/num_history_mock.dart';
 import 'package:randomlottonumber/models/lotto_round_info.dart';
+import 'package:randomlottonumber/models/lotto_winning_round.dart';
 import 'package:randomlottonumber/models/saved_lotto_number.dart';
+import 'package:randomlottonumber/services/lotto_result_checker.dart';
 import 'package:randomlottonumber/pages/community_page.dart';
 import 'package:randomlottonumber/pages/lotto_draw_page.dart';
 import 'package:randomlottonumber/pages/my_numbers_page.dart';
@@ -17,6 +20,8 @@ class MainShellPage extends StatefulWidget {
 }
 
 class _MainShellPageState extends State<MainShellPage> {
+  static const _resultChecker = LottoResultChecker();
+
   int selectedIndex = 0;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
@@ -26,11 +31,14 @@ class _MainShellPageState extends State<MainShellPage> {
 
   void saveLottoNumbers(List<int> numbers) {
     final now = DateTime.now();
-    final savedNumber = SavedLottoNumber(
-      id: now.microsecondsSinceEpoch.toString(),
-      numbers: List<int>.from(numbers),
-      createdAt: now,
-      round: roundInfo.activeRound,
+    final savedNumber = _applyWinningResult(
+      SavedLottoNumber(
+        id: now.microsecondsSinceEpoch.toString(),
+        numbers: List<int>.from(numbers),
+        createdAt: now,
+        round: roundInfo.activeRound,
+      ),
+      checkedAt: now,
     );
 
     setState(() {
@@ -43,6 +51,43 @@ class _MainShellPageState extends State<MainShellPage> {
         duration: Duration(seconds: 1),
       ),
     );
+  }
+
+  SavedLottoNumber _applyWinningResult(
+    SavedLottoNumber savedNumber, {
+    required DateTime checkedAt,
+  }) {
+    final winningRound = _findWinningRound(savedNumber.round);
+
+    if (winningRound == null) {
+      return savedNumber;
+    }
+
+    final result = _resultChecker.check(
+      savedNumber: savedNumber,
+      winningRound: winningRound,
+    );
+
+    return savedNumber.copyWith(
+      resultStatus: result.status,
+      matchCount: result.matchCount,
+      isBonusMatched: result.isBonusMatched,
+      checkedAt: checkedAt,
+    );
+  }
+
+  LottoWinningRound? _findWinningRound(int? round) {
+    if (round == null) {
+      return null;
+    }
+
+    for (final winningRound in lottoWinningRounds) {
+      if (winningRound.round == round) {
+        return winningRound;
+      }
+    }
+
+    return null;
   }
 
   void togglePurchased(String id) {

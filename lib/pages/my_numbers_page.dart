@@ -245,15 +245,7 @@ class _SavedNumbersList extends StatelessWidget {
                     .toList(),
               ),
               const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  '${_resultStatusLabel(savedNumber.resultStatus)} · ${_formatCreatedAt(savedNumber.createdAt)}',
-                  style: const TextStyle(
-                    color: greyColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
+              _ResultSummary(savedNumber: savedNumber),
             ],
           ),
         );
@@ -284,6 +276,91 @@ class _SavedNumbersList extends StatelessWidget {
 
     if (shouldDelete == true) {
       onDeleteSavedNumber(id);
+    }
+  }
+}
+
+class _ResultSummary extends StatelessWidget {
+  const _ResultSummary({required this.savedNumber});
+
+  final SavedLottoNumber savedNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final resultColor = _resultStatusColor(savedNumber.resultStatus);
+    final detailText = _resultDetailText(savedNumber);
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: resultColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: resultColor.withOpacity(0.28)),
+              ),
+              child: Text(
+                _resultStatusLabel(savedNumber.resultStatus),
+                style: TextStyle(
+                  color: resultColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            if (detailText != null) ...[
+              const SizedBox(width: 8),
+              Text(
+                detailText,
+                style: const TextStyle(
+                  color: greyColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          _formatCreatedAt(savedNumber.createdAt),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: greyColor,
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String? _resultDetailText(SavedLottoNumber savedNumber) {
+    if (savedNumber.resultStatus == LottoResultStatus.pending ||
+        savedNumber.matchCount == null) {
+      return null;
+    }
+
+    final bonusText = savedNumber.isBonusMatched == true ? ' + 보너스' : '';
+    return '${savedNumber.matchCount}개 일치$bonusText';
+  }
+
+  Color _resultStatusColor(LottoResultStatus status) {
+    switch (status) {
+      case LottoResultStatus.pending:
+        return greyColor;
+      case LottoResultStatus.notWon:
+        return const Color(0xff6B7280);
+      case LottoResultStatus.fifth:
+      case LottoResultStatus.fourth:
+        return const Color(0xff2563EB);
+      case LottoResultStatus.third:
+      case LottoResultStatus.second:
+        return const Color(0xff7C3AED);
+      case LottoResultStatus.first:
+        return mainColor;
     }
   }
 
