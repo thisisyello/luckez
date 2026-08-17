@@ -4,6 +4,7 @@ import 'package:randomlottonumber/data/num_history_mock.dart';
 import 'package:randomlottonumber/models/lotto_round_info.dart';
 import 'package:randomlottonumber/models/lotto_winning_round.dart';
 import 'package:randomlottonumber/models/saved_lotto_number.dart';
+import 'package:randomlottonumber/services/auth_service.dart';
 import 'package:randomlottonumber/services/lotto_result_checker.dart';
 import 'package:randomlottonumber/pages/community_page.dart';
 import 'package:randomlottonumber/pages/lotto_draw_page.dart';
@@ -20,14 +21,42 @@ class MainShellPage extends StatefulWidget {
 }
 
 class _MainShellPageState extends State<MainShellPage> {
+  static final _authService = AuthService();
   static const _resultChecker = LottoResultChecker();
 
   int selectedIndex = 0;
+  String? currentUserId;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
     latestDrawRound: initialLatestDrawRound,
   );
   final List<SavedLottoNumber> savedNumbers = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _signInAnonymously();
+  }
+
+  Future<void> _signInAnonymously() async {
+    try {
+      final user = await _authService.signInAnonymouslyIfNeeded();
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        currentUserId = user.uid;
+      });
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('로그인 연결을 확인해주세요');
+    }
+  }
 
   void saveLottoNumbers(List<int> numbers) {
     final now = DateTime.now();
@@ -221,7 +250,7 @@ class _MainShellPageState extends State<MainShellPage> {
       leading: IconButton(
         icon: const Icon(Icons.person_outline),
         color: blackColor,
-        onPressed: () => _showComingSoonMessage('마이페이지 준비 중'),
+        onPressed: () => _showUserStatus(),
       ),
       actions: [
         IconButton(
@@ -232,6 +261,11 @@ class _MainShellPageState extends State<MainShellPage> {
         const SizedBox(width: 8),
       ],
     );
+  }
+
+  void _showUserStatus() {
+    final message = currentUserId == null ? '익명 로그인 확인 중' : '익명 사용자로 연결됐어요';
+    _showComingSoonMessage(message);
   }
 
   void _showComingSoonMessage(String message) {
