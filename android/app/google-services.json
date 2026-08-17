@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "475615354311",
+    "project_id": "luckez-9883e",
+    "storage_bucket": "luckez-9883e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475615354311:android:518adf8730b23265b40de2",
+        "android_client_info": {
+          "package_name": "com.thisisyello.luckez"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJkz1FDBzmuBjVsbiK8Xg4blfEusTKecE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,4 +1,4 @@
-package com.yello.randomlottonumber
+package com.thisisyello.luckez
 
 import io.flutter.embedding.android.FlutterActivity
 
