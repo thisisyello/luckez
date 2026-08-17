@@ -32,6 +32,24 @@
       "languageVersion": "2.12"
     },
     {
+      "name": "cloud_firestore",
+      "rootUri": "file:///Users/yello/.pub-cache/hosted/pub.dev/cloud_firestore-4.14.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
+      "name": "cloud_firestore_platform_interface",
+      "rootUri": "file:///Users/yello/.pub-cache/hosted/pub.dev/cloud_firestore_platform_interface-6.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
+      "name": "cloud_firestore_web",
+      "rootUri": "file:///Users/yello/.pub-cache/hosted/pub.dev/cloud_firestore_web-3.9.0",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
       "name": "collection",
       "rootUri": "file:///Users/yello/.pub-cache/hosted/pub.dev/collection-1.17.2",
       "packageUri": "lib/",
@@ -224,7 +242,7 @@
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2026-08-17T07:47:37.970249Z",
+  "generated": "2026-08-17T08:03:25.439387Z",
   "generator": "pub",
   "generatorVersion": "3.1.5"
 }

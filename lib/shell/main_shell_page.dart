@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:randomlottonumber/constants/lotto_round.dart';
 import 'package:randomlottonumber/data/num_history_mock.dart';
 import 'package:randomlottonumber/models/lotto_round_info.dart';
 import 'package:randomlottonumber/models/lotto_winning_round.dart';
 import 'package:randomlottonumber/models/saved_lotto_number.dart';
+import 'package:randomlottonumber/repositories/saved_lotto_number_repository.dart';
 import 'package:randomlottonumber/services/auth_service.dart';
 import 'package:randomlottonumber/services/lotto_result_checker.dart';
 import 'package:randomlottonumber/pages/community_page.dart';
@@ -22,10 +25,12 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   static final _authService = AuthService();
+  static final _savedNumberRepository = SavedLottoNumberRepository();
   static const _resultChecker = LottoResultChecker();
 
   int selectedIndex = 0;
   String? currentUserId;
+  StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
     latestDrawRound: initialLatestDrawRound,
@@ -49,6 +54,7 @@ class _MainShellPageState extends State<MainShellPage> {
       setState(() {
         currentUserId = user.uid;
       });
+      _listenSavedNumbers(user.uid);
     } catch (_) {
       if (!mounted) {
         return;
@@ -58,7 +64,45 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  void saveLottoNumbers(List<int> numbers) {
+  @override
+  void dispose() {
+    savedNumbersSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _listenSavedNumbers(String userId) {
+    savedNumbersSubscription?.cancel();
+    savedNumbersSubscription =
+        _savedNumberRepository.watchSavedNumbers(userId).listen(
+      (numbers) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          savedNumbers
+            ..clear()
+            ..addAll(numbers);
+        });
+      },
+      onError: (_) {
+        if (!mounted) {
+          return;
+        }
+
+        _showComingSoonMessage('저장번호를 불러오지 못했어요');
+      },
+    );
+  }
+
+  Future<void> saveLottoNumbers(List<int> numbers) async {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      _showComingSoonMessage('로그인 연결을 확인해주세요');
+      return;
+    }
+
     final now = DateTime.now();
     final savedNumber = _applyWinningResult(
       SavedLottoNumber(
@@ -70,9 +114,20 @@ class _MainShellPageState extends State<MainShellPage> {
       checkedAt: now,
     );
 
-    setState(() {
-      savedNumbers.add(savedNumber);
-    });
+    try {
+      await _savedNumberRepository.save(userId, savedNumber);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('번호 저장에 실패했어요');
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -119,32 +174,34 @@ class _MainShellPageState extends State<MainShellPage> {
     return null;
   }
 
-  void togglePurchased(String id) {
+  Future<void> togglePurchased(String id) async {
+    final userId = currentUserId;
     final index =
         savedNumbers.indexWhere((savedNumber) => savedNumber.id == id);
 
-    if (index == -1) {
+    if (userId == null || index == -1) {
       return;
     }
 
     final savedNumber = savedNumbers[index];
+    final updatedSavedNumber = savedNumber.copyWith(
+      isPurchased: !savedNumber.isPurchased,
+      updatedAt: DateTime.now(),
+    );
 
-    setState(() {
-      savedNumbers[index] = savedNumber.copyWith(
-        isPurchased: !savedNumber.isPurchased,
-        updatedAt: DateTime.now(),
-      );
-    });
+    await _updateSavedNumber(userId, updatedSavedNumber);
   }
 
-  void updateSavedNumbers(String id, List<int> numbers) {
+  Future<void> updateSavedNumbers(String id, List<int> numbers) async {
+    final userId = currentUserId;
     final index =
         savedNumbers.indexWhere((savedNumber) => savedNumber.id == id);
 
-    if (index == -1) {
+    if (userId == null || index == -1) {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     final now = DateTime.now();
     final savedNumber = savedNumbers[index].copyWith(
       numbers: List<int>.from(numbers)..sort(),
@@ -155,11 +212,13 @@ class _MainShellPageState extends State<MainShellPage> {
       checkedAt: now,
     );
 
-    setState(() {
-      savedNumbers[index] = updatedSavedNumber;
-    });
+    final isUpdated = await _updateSavedNumber(userId, updatedSavedNumber);
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    if (!mounted || !isUpdated) {
+      return;
+    }
+
+    messenger.showSnackBar(
       const SnackBar(
         content: Text('저장한 번호를 수정했어요'),
         duration: Duration(seconds: 1),
@@ -167,10 +226,44 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  void deleteSavedNumber(String id) {
-    setState(() {
-      savedNumbers.removeWhere((savedNumber) => savedNumber.id == id);
-    });
+  Future<bool> _updateSavedNumber(
+    String userId,
+    SavedLottoNumber savedNumber,
+  ) async {
+    try {
+      await _savedNumberRepository.update(userId, savedNumber);
+      return true;
+    } catch (_) {
+      if (!mounted) {
+        return false;
+      }
+
+      _showComingSoonMessage('저장번호 수정에 실패했어요');
+      return false;
+    }
+  }
+
+  Future<void> deleteSavedNumber(String id) async {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      return;
+    }
+
+    try {
+      await _savedNumberRepository.delete(userId, id);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('저장번호 삭제에 실패했어요');
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:randomlottonumber/models/lotto_result_status.dart';
 
 class SavedLottoNumber {
@@ -13,6 +14,21 @@ class SavedLottoNumber {
     this.isBonusMatched,
     this.checkedAt,
   });
+
+  factory SavedLottoNumber.fromMap(String id, Map<String, dynamic> map) {
+    return SavedLottoNumber(
+      id: id,
+      numbers: List<int>.from(map['numbers'] as List<dynamic>),
+      createdAt: _dateTimeFromMapValue(map['createdAt']) ?? DateTime.now(),
+      updatedAt: _dateTimeFromMapValue(map['updatedAt']),
+      round: map['round'] as int?,
+      isPurchased: map['isPurchased'] as bool? ?? false,
+      resultStatus: _resultStatusFromName(map['resultStatus'] as String?),
+      matchCount: map['matchCount'] as int?,
+      isBonusMatched: map['isBonusMatched'] as bool?,
+      checkedAt: _dateTimeFromMapValue(map['checkedAt']),
+    );
+  }
 
   final String id;
   final List<int> numbers;
@@ -49,5 +65,45 @@ class SavedLottoNumber {
       isBonusMatched: isBonusMatched ?? this.isBonusMatched,
       checkedAt: checkedAt ?? this.checkedAt,
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'numbers': numbers,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': updatedAt == null ? null : Timestamp.fromDate(updatedAt!),
+      'round': round,
+      'isPurchased': isPurchased,
+      'resultStatus': resultStatus.name,
+      'matchCount': matchCount,
+      'isBonusMatched': isBonusMatched,
+      'checkedAt': checkedAt == null ? null : Timestamp.fromDate(checkedAt!),
+    };
+  }
+
+  static DateTime? _dateTimeFromMapValue(Object? value) {
+    if (value == null) {
+      return null;
+    }
+
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+
+    if (value is DateTime) {
+      return value;
+    }
+
+    return null;
+  }
+
+  static LottoResultStatus _resultStatusFromName(String? name) {
+    for (final status in LottoResultStatus.values) {
+      if (status.name == name) {
+        return status;
+      }
+    }
+
+    return LottoResultStatus.pending;
   }
 }
