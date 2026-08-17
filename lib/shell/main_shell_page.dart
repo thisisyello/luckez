@@ -1,20 +1,20 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/constants/lotto_round.dart';
-import 'package:randomlottonumber/data/num_history_mock.dart';
-import 'package:randomlottonumber/models/lotto_round_info.dart';
-import 'package:randomlottonumber/models/lotto_winning_round.dart';
-import 'package:randomlottonumber/models/saved_lotto_number.dart';
-import 'package:randomlottonumber/repositories/saved_lotto_number_repository.dart';
-import 'package:randomlottonumber/services/auth_service.dart';
-import 'package:randomlottonumber/services/lotto_result_checker.dart';
-import 'package:randomlottonumber/pages/community_page.dart';
-import 'package:randomlottonumber/pages/lotto_draw_page.dart';
-import 'package:randomlottonumber/pages/my_numbers_page.dart';
-import 'package:randomlottonumber/pages/purchase_page.dart';
-import 'package:randomlottonumber/pages/stats_page.dart';
-import 'package:randomlottonumber/theme/app_colors.dart';
+import 'package:luckez/constants/lotto_round.dart';
+import 'package:luckez/data/num_history_mock.dart';
+import 'package:luckez/models/lotto_round_info.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
+import 'package:luckez/models/saved_lotto_number.dart';
+import 'package:luckez/repositories/saved_lotto_number_repository.dart';
+import 'package:luckez/services/auth_service.dart';
+import 'package:luckez/services/lotto_result_checker.dart';
+import 'package:luckez/pages/community_page.dart';
+import 'package:luckez/pages/lotto_draw_page.dart';
+import 'package:luckez/pages/my_numbers_page.dart';
+import 'package:luckez/pages/purchase_page.dart';
+import 'package:luckez/pages/stats_page.dart';
+import 'package:luckez/theme/app_colors.dart';
 
 class MainShellPage extends StatefulWidget {
   const MainShellPage({super.key});

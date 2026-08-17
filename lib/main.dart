@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/firebase_options.dart';
-import 'package:randomlottonumber/shell/main_shell_page.dart';
+import 'package:luckez/firebase_options.dart';
+import 'package:luckez/shell/main_shell_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:randomlottonumber/models/saved_lotto_number.dart';
+import 'package:luckez/models/saved_lotto_number.dart';
 
 class SavedLottoNumberRepository {
   SavedLottoNumberRepository({FirebaseFirestore? firestore})

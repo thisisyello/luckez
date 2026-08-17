@@ -1,4 +1,4 @@
-import 'package:randomlottonumber/models/lotto_result_status.dart';
+import 'package:luckez/models/lotto_result_status.dart';
 
 class LottoMatchResult {
   const LottoMatchResult({

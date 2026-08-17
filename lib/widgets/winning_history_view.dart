@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/data/num_history_mock.dart';
-import 'package:randomlottonumber/models/lotto_winning_round.dart';
-import 'package:randomlottonumber/theme/app_colors.dart';
-import 'package:randomlottonumber/widgets/lotto_ball.dart';
+import 'package:luckez/data/num_history_mock.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
+import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/widgets/lotto_ball.dart';
 
 class WinningHistoryView extends StatelessWidget {
   const WinningHistoryView({super.key});

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:randomlottonumber/models/lotto_result_status.dart';
+import 'package:luckez/models/lotto_result_status.dart';
 
 class SavedLottoNumber {
   const SavedLottoNumber({

@@ -1,8 +1,8 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/theme/app_colors.dart';
-import 'package:randomlottonumber/widgets/lotto_ball.dart';
+import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/widgets/lotto_ball.dart';
 
 class LottoDrawPage extends StatefulWidget {
   const LottoDrawPage({

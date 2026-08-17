@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/theme/app_colors.dart';
+import 'package:luckez/theme/app_colors.dart';
 
 class PurchasePage extends StatelessWidget {
   const PurchasePage({super.key});

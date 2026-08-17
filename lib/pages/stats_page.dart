@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/data/num_history_mock.dart';
-import 'package:randomlottonumber/models/lotto_number_frequency.dart';
-import 'package:randomlottonumber/services/lotto_statistics_service.dart';
-import 'package:randomlottonumber/theme/app_colors.dart';
-import 'package:randomlottonumber/widgets/winning_history_view.dart';
+import 'package:luckez/data/num_history_mock.dart';
+import 'package:luckez/models/lotto_number_frequency.dart';
+import 'package:luckez/services/lotto_statistics_service.dart';
+import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/widgets/winning_history_view.dart';
 
 enum _StatsView {
   frequency,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:randomlottonumber/models/lotto_result_status.dart';
-import 'package:randomlottonumber/models/saved_lotto_number.dart';
-import 'package:randomlottonumber/theme/app_colors.dart';
-import 'package:randomlottonumber/widgets/lotto_ball.dart';
+import 'package:luckez/models/lotto_result_status.dart';
+import 'package:luckez/models/saved_lotto_number.dart';
+import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/widgets/lotto_ball.dart';
 
 typedef SavedNumbersUpdated = void Function(String id, List<int> numbers);
 

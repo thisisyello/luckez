@@ -236,13 +236,13 @@
       "languageVersion": "3.1"
     },
     {
-      "name": "randomlottonumber",
+      "name": "luckez",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.0"
     }
   ],
-  "generated": "2026-08-17T08:03:25.439387Z",
+  "generated": "2026-08-17T08:24:24.847551Z",
   "generator": "pub",
   "generatorVersion": "3.1.5"
 }

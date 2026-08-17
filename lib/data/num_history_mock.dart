@@ -1,4 +1,4 @@
-import 'package:randomlottonumber/models/lotto_winning_round.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
 
 const List<LottoWinningRound> lottoWinningRounds = [
   LottoWinningRound(

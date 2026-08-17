@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "randomlottonumber" "\0"
+            VALUE "FileDescription", "luckez" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "randomlottonumber" "\0"
+            VALUE "InternalName", "luckez" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2023 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "randomlottonumber.exe" "\0"
-            VALUE "ProductName", "randomlottonumber" "\0"
+            VALUE "OriginalFilename", "luckez.exe" "\0"
+            VALUE "ProductName", "luckez" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

@@ -1,7 +1,7 @@
-import 'package:randomlottonumber/models/lotto_match_result.dart';
-import 'package:randomlottonumber/models/lotto_result_status.dart';
-import 'package:randomlottonumber/models/lotto_winning_round.dart';
-import 'package:randomlottonumber/models/saved_lotto_number.dart';
+import 'package:luckez/models/lotto_match_result.dart';
+import 'package:luckez/models/lotto_result_status.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
+import 'package:luckez/models/saved_lotto_number.dart';
 
 class LottoResultChecker {
   const LottoResultChecker();

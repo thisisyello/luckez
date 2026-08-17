@@ -1,5 +1,5 @@
-import 'package:randomlottonumber/models/lotto_number_frequency.dart';
-import 'package:randomlottonumber/models/lotto_winning_round.dart';
+import 'package:luckez/models/lotto_number_frequency.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
 
 class LottoStatisticsService {
   const LottoStatisticsService();
