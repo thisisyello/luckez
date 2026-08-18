@@ -10,6 +10,7 @@ import 'package:luckez/repositories/saved_lotto_number_repository.dart';
 import 'package:luckez/repositories/winning_round_repository.dart';
 import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/services/lotto_result_checker.dart';
+import 'package:luckez/pages/account_page.dart';
 import 'package:luckez/pages/community_page.dart';
 import 'package:luckez/pages/lotto_draw_page.dart';
 import 'package:luckez/pages/my_numbers_page.dart';
@@ -148,6 +149,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
     if (userId == null) {
       _showComingSoonMessage('번호 저장은 로그인이 필요해요');
+      _openAccountPage();
       return;
     }
 
@@ -339,13 +341,21 @@ class _MainShellPageState extends State<MainShellPage> {
             hasError: hasWinningRoundsError,
           ),
           const PurchasePage(),
-          MyNumbersPage(
-            savedNumbers: savedNumbers,
-            activeRound: roundInfo.activeRound,
-            onTogglePurchased: togglePurchased,
-            onUpdateSavedNumbers: updateSavedNumbers,
-            onDeleteSavedNumber: deleteSavedNumber,
-          ),
+          currentUserId == null
+              ? AccountPageContent(
+                  isLoggedIn: false,
+                  savedNumbersCount: savedNumbers.length,
+                  purchasedNumbersCount: _purchasedNumbersCount,
+                  onGooglePressed: _showGoogleSignInPreparing,
+                  onApplePressed: _showAppleSignInPreparing,
+                )
+              : MyNumbersPage(
+                  savedNumbers: savedNumbers,
+                  activeRound: roundInfo.activeRound,
+                  onTogglePurchased: togglePurchased,
+                  onUpdateSavedNumbers: updateSavedNumbers,
+                  onDeleteSavedNumber: deleteSavedNumber,
+                ),
           const CommunityPage(),
         ],
       ),
@@ -395,7 +405,7 @@ class _MainShellPageState extends State<MainShellPage> {
       leading: IconButton(
         icon: const Icon(Icons.person_outline),
         color: blackColor,
-        onPressed: () => _showUserStatus(),
+        onPressed: _openAccountPage,
       ),
       actions: [
         IconButton(
@@ -408,9 +418,49 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  void _showUserStatus() {
-    final message = currentUserId == null ? '로그인이 필요해요' : '로그인된 사용자예요';
-    _showComingSoonMessage(message);
+  int get _purchasedNumbersCount {
+    return savedNumbers.where((savedNumber) => savedNumber.isPurchased).length;
+  }
+
+  void _openAccountPage() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => AccountPage(
+          isLoggedIn: currentUserId != null,
+          savedNumbersCount: savedNumbers.length,
+          purchasedNumbersCount: _purchasedNumbersCount,
+          onGooglePressed: _showGoogleSignInPreparing,
+          onApplePressed: _showAppleSignInPreparing,
+          onSignOutPressed: currentUserId == null ? null : _signOut,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await _authService.signOut();
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context).maybePop();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('로그아웃에 실패했어요');
+    }
+  }
+
+  void _showGoogleSignInPreparing() {
+    _showComingSoonMessage('Google 로그인 준비 중');
+  }
+
+  void _showAppleSignInPreparing() {
+    _showComingSoonMessage('Apple 로그인 준비 중');
   }
 
   void _showComingSoonMessage(String message) {
