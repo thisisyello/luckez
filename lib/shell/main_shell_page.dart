@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:luckez/constants/lotto_round.dart';
 import 'package:luckez/models/lotto_round_info.dart';
@@ -31,6 +32,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   int selectedIndex = 0;
   String? currentUserId;
+  StreamSubscription<User?>? authSubscription;
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
   StreamSubscription<List<LottoWinningRound>>? winningRoundsSubscription;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
@@ -45,7 +47,8 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   void initState() {
     super.initState();
-    _signInAnonymously();
+    _listenAuthState();
+    _listenWinningRounds();
   }
 
   void _listenWinningRounds() {
@@ -82,30 +85,34 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  Future<void> _signInAnonymously() async {
-    try {
-      final user = await _authService.signInAnonymouslyIfNeeded();
-
+  void _listenAuthState() {
+    authSubscription?.cancel();
+    authSubscription = _authService.authStateChanges.listen((user) {
       if (!mounted) {
         return;
       }
 
       setState(() {
-        currentUserId = user.uid;
+        currentUserId = user?.uid;
+
+        if (user == null) {
+          savedNumbers.clear();
+        }
       });
-      _listenWinningRounds();
-      _listenSavedNumbers(user.uid);
-    } catch (_) {
-      if (!mounted) {
+
+      if (user == null) {
+        savedNumbersSubscription?.cancel();
+        savedNumbersSubscription = null;
         return;
       }
 
-      _showComingSoonMessage('로그인 연결을 확인해주세요');
-    }
+      _listenSavedNumbers(user.uid);
+    });
   }
 
   @override
   void dispose() {
+    authSubscription?.cancel();
     savedNumbersSubscription?.cancel();
     winningRoundsSubscription?.cancel();
     super.dispose();
@@ -140,7 +147,7 @@ class _MainShellPageState extends State<MainShellPage> {
     final userId = currentUserId;
 
     if (userId == null) {
-      _showComingSoonMessage('로그인 연결을 확인해주세요');
+      _showComingSoonMessage('번호 저장은 로그인이 필요해요');
       return;
     }
 
@@ -402,7 +409,7 @@ class _MainShellPageState extends State<MainShellPage> {
   }
 
   void _showUserStatus() {
-    final message = currentUserId == null ? '익명 로그인 확인 중' : '익명 사용자로 연결됐어요';
+    final message = currentUserId == null ? '로그인이 필요해요' : '로그인된 사용자예요';
     _showComingSoonMessage(message);
   }
 
