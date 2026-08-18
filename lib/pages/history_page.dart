@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/widgets/winning_history_view.dart';
 
 class HistoryPage extends StatelessWidget {
-  const HistoryPage({super.key});
+  const HistoryPage({
+    super.key,
+    required this.winningRounds,
+  });
+
+  final List<LottoWinningRound> winningRounds;
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +25,7 @@ class HistoryPage extends StatelessWidget {
         iconTheme: const IconThemeData(color: blackColor),
       ),
       backgroundColor: const Color(0xffF7F7F8),
-      body: const WinningHistoryView(),
+      body: WinningHistoryView(winningRounds: winningRounds),
     );
   }
 }

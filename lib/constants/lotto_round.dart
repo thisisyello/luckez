@@ -1,2 +1,2 @@
-const initialActiveRound = 1150;
-const initialLatestDrawRound = 0;
+const initialActiveRound = 1238;
+const initialLatestDrawRound = 1237;

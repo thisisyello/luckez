@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:luckez/data/num_history_mock.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 class WinningHistoryView extends StatelessWidget {
-  const WinningHistoryView({super.key});
+  const WinningHistoryView({
+    super.key,
+    required this.winningRounds,
+  });
+
+  final List<LottoWinningRound> winningRounds;
 
   @override
   Widget build(BuildContext context) {
-    final reversedRounds = lottoWinningRounds.reversed.toList();
+    final reversedRounds = winningRounds.reversed.toList();
 
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
@@ -56,18 +60,19 @@ class _WinningRoundCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    ...winningRound.numbers.map(
-                      (number) => HistoryNumberBall(number: number),
-                    ),
-                  ],
-                ),
+              ...winningRound.numbers.map(
+                (number) => HistoryNumberBall(number: number),
               ),
-              const SizedBox(width: 10),
+              // Expanded(
+              //   child: Row(
+              //     // mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //     ],
+              //   ),
+              // ),
+              // const SizedBox(width: 24),
               const Text(
                 '+',
                 style: TextStyle(
@@ -76,7 +81,7 @@ class _WinningRoundCard extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(width: 10),
+              // const SizedBox(width: 24),
               HistoryNumberBall(number: winningRound.bonusNumber),
             ],
           ),

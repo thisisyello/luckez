@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:luckez/data/num_history_mock.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/lotto_number_frequency.dart';
 import 'package:luckez/services/lotto_statistics_service.dart';
 import 'package:luckez/theme/app_colors.dart';
@@ -11,7 +11,16 @@ enum _StatsView {
 }
 
 class StatsPage extends StatefulWidget {
-  const StatsPage({super.key});
+  const StatsPage({
+    super.key,
+    required this.winningRounds,
+    required this.isLoading,
+    required this.hasError,
+  });
+
+  final List<LottoWinningRound> winningRounds;
+  final bool isLoading;
+  final bool hasError;
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -25,11 +34,13 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final frequencies = _statisticsService.calculateNumberFrequencies(
-      rounds: lottoWinningRounds,
-      includeBonusNumber: includeBonusNumber,
-    );
-    final maxCount = frequencies.first.count;
+    final frequencies = widget.isLoading || widget.hasError
+        ? <LottoNumberFrequency>[]
+        : _statisticsService.calculateNumberFrequencies(
+            rounds: widget.winningRounds,
+            includeBonusNumber: includeBonusNumber,
+          );
+    final maxCount = frequencies.isEmpty ? 0 : frequencies.first.count;
     final isFrequencyView = selectedView == _StatsView.frequency;
 
     return ColoredBox(
@@ -55,7 +66,7 @@ class _StatsPageState extends State<StatsPage> {
                   const SizedBox(height: 6),
                   Center(
                     child: Text(
-                      '${lottoWinningRounds.first.round}회 ~ ${lottoWinningRounds.last.round}회',
+                      _roundRangeLabel,
                       style: const TextStyle(
                         color: greyColor,
                         fontSize: 13,
@@ -91,17 +102,35 @@ class _StatsPageState extends State<StatsPage> {
               ),
             ),
             Expanded(
-              child: isFrequencyView
-                  ? _NumberFrequencyList(
-                      frequencies: frequencies,
-                      maxCount: maxCount,
-                    )
-                  : const WinningHistoryView(),
+              child: _StatsBody(
+                isLoading: widget.isLoading,
+                hasError: widget.hasError,
+                isFrequencyView: isFrequencyView,
+                frequencies: frequencies,
+                maxCount: maxCount,
+                winningRounds: widget.winningRounds,
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String get _roundRangeLabel {
+    if (widget.isLoading) {
+      return '당첨번호 불러오는 중';
+    }
+
+    if (widget.hasError) {
+      return '당첨번호를 불러오지 못했어요';
+    }
+
+    if (widget.winningRounds.isEmpty) {
+      return '당첨번호 데이터 없음';
+    }
+
+    return '${widget.winningRounds.first.round}회 ~ ${widget.winningRounds.last.round}회';
   }
 
   ButtonStyle get _segmentedButtonStyle {
@@ -115,6 +144,189 @@ class _StatsPageState extends State<StatsPage> {
           color: states.contains(MaterialState.selected)
               ? mainColor
               : const Color(0xffE6E6E8),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatsBody extends StatelessWidget {
+  const _StatsBody({
+    required this.isLoading,
+    required this.hasError,
+    required this.isFrequencyView,
+    required this.frequencies,
+    required this.maxCount,
+    required this.winningRounds,
+  });
+
+  final bool isLoading;
+  final bool hasError;
+  final bool isFrequencyView;
+  final List<LottoNumberFrequency> frequencies;
+  final int maxCount;
+  final List<LottoWinningRound> winningRounds;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const _StatsSkeletonList();
+    }
+
+    if (hasError) {
+      return const _StatsStateMessage(
+        icon: Icons.cloud_off_outlined,
+        message: '당첨번호를 불러오지 못했어요',
+      );
+    }
+
+    if (winningRounds.isEmpty) {
+      return const _StatsStateMessage(
+        icon: Icons.info_outline,
+        message: '당첨번호 데이터가 없어요',
+      );
+    }
+
+    if (isFrequencyView) {
+      return _NumberFrequencyList(
+        frequencies: frequencies,
+        maxCount: maxCount,
+      );
+    }
+
+    return WinningHistoryView(winningRounds: winningRounds);
+  }
+}
+
+class _StatsStateMessage extends StatelessWidget {
+  const _StatsStateMessage({
+    required this.icon,
+    required this.message,
+  });
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: greyColor,
+            size: 34,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            message,
+            style: const TextStyle(
+              color: greyColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatsSkeletonList extends StatelessWidget {
+  const _StatsSkeletonList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      itemCount: 8,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, __) => const _StatsSkeletonCard(),
+    );
+  }
+}
+
+class _StatsSkeletonCard extends StatelessWidget {
+  const _StatsSkeletonCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: whiteColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xffEEEEEE)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: const Row(
+        children: [
+          _SkeletonBlock(width: 28, height: 14),
+          SizedBox(width: 14),
+          _SkeletonCircle(size: 38),
+          SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _SkeletonBlock(height: 14),
+                SizedBox(height: 10),
+                _SkeletonBlock(height: 7),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SkeletonCircle extends StatelessWidget {
+  const _SkeletonCircle({required this.size});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        color: Color(0xffECECEF),
+      ),
+    );
+  }
+}
+
+class _SkeletonBlock extends StatelessWidget {
+  const _SkeletonBlock({
+    this.width,
+    required this.height,
+  });
+
+  final double? width;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: const Color(0xffECECEF),
+          borderRadius: BorderRadius.circular(999),
         ),
       ),
     );

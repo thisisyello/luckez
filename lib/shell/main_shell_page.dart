@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:luckez/constants/lotto_round.dart';
-import 'package:luckez/data/num_history_mock.dart';
 import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
+import 'package:luckez/repositories/winning_round_repository.dart';
 import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/services/lotto_result_checker.dart';
 import 'package:luckez/pages/community_page.dart';
@@ -26,21 +26,60 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   static final _authService = AuthService();
   static final _savedNumberRepository = SavedLottoNumberRepository();
+  static final _winningRoundRepository = WinningRoundRepository();
   static const _resultChecker = LottoResultChecker();
 
   int selectedIndex = 0;
   String? currentUserId;
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
+  StreamSubscription<List<LottoWinningRound>>? winningRoundsSubscription;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
     latestDrawRound: initialLatestDrawRound,
   );
   final List<SavedLottoNumber> savedNumbers = [];
+  List<LottoWinningRound> winningRounds = [];
+  bool isWinningRoundsLoading = true;
+  bool hasWinningRoundsError = false;
 
   @override
   void initState() {
     super.initState();
     _signInAnonymously();
+  }
+
+  void _listenWinningRounds() {
+    winningRoundsSubscription?.cancel();
+    winningRoundsSubscription =
+        _winningRoundRepository.watchWinningRounds().listen(
+      (rounds) {
+        if (!mounted || rounds.isEmpty) {
+          return;
+        }
+
+        setState(() {
+          winningRounds = rounds;
+          isWinningRoundsLoading = false;
+          hasWinningRoundsError = false;
+          roundInfo = roundInfo.copyWith(
+            activeRound: rounds.last.round + 1,
+            latestDrawRound: rounds.last.round,
+          );
+        });
+      },
+      onError: (_) {
+        if (!mounted) {
+          return;
+        }
+
+        _showComingSoonMessage('당첨번호를 불러오지 못했어요');
+        setState(() {
+          winningRounds = [];
+          isWinningRoundsLoading = false;
+          hasWinningRoundsError = true;
+        });
+      },
+    );
   }
 
   Future<void> _signInAnonymously() async {
@@ -54,6 +93,7 @@ class _MainShellPageState extends State<MainShellPage> {
       setState(() {
         currentUserId = user.uid;
       });
+      _listenWinningRounds();
       _listenSavedNumbers(user.uid);
     } catch (_) {
       if (!mounted) {
@@ -67,6 +107,7 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   void dispose() {
     savedNumbersSubscription?.cancel();
+    winningRoundsSubscription?.cancel();
     super.dispose();
   }
 
@@ -165,7 +206,7 @@ class _MainShellPageState extends State<MainShellPage> {
       return null;
     }
 
-    for (final winningRound in lottoWinningRounds) {
+    for (final winningRound in winningRounds) {
       if (winningRound.round == round) {
         return winningRound;
       }
@@ -285,7 +326,11 @@ class _MainShellPageState extends State<MainShellPage> {
             savedNumbersCount: savedNumbers.length,
             onSaveNumbers: saveLottoNumbers,
           ),
-          const StatsPage(),
+          StatsPage(
+            winningRounds: winningRounds,
+            isLoading: isWinningRoundsLoading,
+            hasError: hasWinningRoundsError,
+          ),
           const PurchasePage(),
           MyNumbersPage(
             savedNumbers: savedNumbers,

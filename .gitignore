@@ -49,3 +49,10 @@ ios/Runner/GeneratedPluginRegistrant.*
 macos/Flutter/ephemeral/
 windows/flutter/ephemeral/
 linux/flutter/ephemeral/
+
+# Local Firebase admin credentials
+node_modules/
+tools/node_modules/
+tools/service-account*.json
+*service-account*.json
+tools/*firebase-adminsdk*.json
