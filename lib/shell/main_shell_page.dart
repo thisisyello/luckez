@@ -348,6 +348,8 @@ class _MainShellPageState extends State<MainShellPage> {
                   purchasedNumbersCount: _purchasedNumbersCount,
                   onGooglePressed: _showGoogleSignInPreparing,
                   onApplePressed: _showAppleSignInPreparing,
+                  onEmailLoginPressed: _signInWithEmail,
+                  onEmailSignUpPressed: _signUpWithEmail,
                 )
               : MyNumbersPage(
                   savedNumbers: savedNumbers,
@@ -431,6 +433,8 @@ class _MainShellPageState extends State<MainShellPage> {
           purchasedNumbersCount: _purchasedNumbersCount,
           onGooglePressed: _showGoogleSignInPreparing,
           onApplePressed: _showAppleSignInPreparing,
+          onEmailLoginPressed: _signInWithEmail,
+          onEmailSignUpPressed: _signUpWithEmail,
           onSignOutPressed: currentUserId == null ? null : _signOut,
         ),
       ),
@@ -461,6 +465,97 @@ class _MainShellPageState extends State<MainShellPage> {
 
   void _showAppleSignInPreparing() {
     _showComingSoonMessage('Apple 로그인 준비 중');
+  }
+
+  Future<void> _signInWithEmail(String email, String password) async {
+    if (email.isEmpty || password.isEmpty) {
+      _showComingSoonMessage('이메일과 비밀번호를 입력해주세요');
+      return;
+    }
+
+    try {
+      await _authService.signInWithEmail(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _closeAccountFlow();
+      _showComingSoonMessage('로그인됐어요');
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage(_authErrorMessage(error));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('로그인에 실패했어요');
+    }
+  }
+
+  Future<void> _signUpWithEmail(String email, String password) async {
+    if (email.isEmpty || password.isEmpty) {
+      _showComingSoonMessage('이메일과 비밀번호를 입력해주세요');
+      return;
+    }
+
+    try {
+      await _authService.signUpWithEmail(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      _closeAccountFlow();
+      _showComingSoonMessage('회원가입이 완료됐어요');
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage(_authErrorMessage(error));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('회원가입에 실패했어요');
+    }
+  }
+
+  void _closeAccountFlow() {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  String _authErrorMessage(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'invalid-email':
+        return '이메일 형식을 확인해주세요';
+      case 'user-disabled':
+        return '사용할 수 없는 계정입니다';
+      case 'user-not-found':
+      case 'wrong-password':
+      case 'invalid-credential':
+        return '이메일 또는 비밀번호를 확인해주세요';
+      case 'email-already-in-use':
+        return '이미 가입된 이메일입니다';
+      case 'weak-password':
+        return '비밀번호는 6자 이상으로 입력해주세요';
+      case 'too-many-requests':
+        return '잠시 후 다시 시도해주세요';
+      default:
+        return '인증 처리에 실패했어요';
+    }
   }
 
   void _showComingSoonMessage(String message) {

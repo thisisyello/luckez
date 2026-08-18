@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:luckez/pages/login_page.dart';
+import 'package:luckez/pages/sign_up_page.dart';
 import 'package:luckez/theme/app_colors.dart';
+
+typedef EmailPasswordSubmitted = void Function(String email, String password);
 
 class AccountPage extends StatelessWidget {
   const AccountPage({
@@ -9,6 +13,8 @@ class AccountPage extends StatelessWidget {
     required this.purchasedNumbersCount,
     required this.onGooglePressed,
     required this.onApplePressed,
+    required this.onEmailLoginPressed,
+    required this.onEmailSignUpPressed,
     this.onSignOutPressed,
   });
 
@@ -17,6 +23,8 @@ class AccountPage extends StatelessWidget {
   final int purchasedNumbersCount;
   final VoidCallback onGooglePressed;
   final VoidCallback onApplePressed;
+  final EmailPasswordSubmitted onEmailLoginPressed;
+  final EmailPasswordSubmitted onEmailSignUpPressed;
   final VoidCallback? onSignOutPressed;
 
   @override
@@ -42,6 +50,8 @@ class AccountPage extends StatelessWidget {
         purchasedNumbersCount: purchasedNumbersCount,
         onGooglePressed: onGooglePressed,
         onApplePressed: onApplePressed,
+        onEmailLoginPressed: onEmailLoginPressed,
+        onEmailSignUpPressed: onEmailSignUpPressed,
         onSignOutPressed: onSignOutPressed,
       ),
     );
@@ -56,6 +66,8 @@ class AccountPageContent extends StatelessWidget {
     required this.purchasedNumbersCount,
     required this.onGooglePressed,
     required this.onApplePressed,
+    required this.onEmailLoginPressed,
+    required this.onEmailSignUpPressed,
     this.onSignOutPressed,
   });
 
@@ -64,6 +76,8 @@ class AccountPageContent extends StatelessWidget {
   final int purchasedNumbersCount;
   final VoidCallback onGooglePressed;
   final VoidCallback onApplePressed;
+  final EmailPasswordSubmitted onEmailLoginPressed;
+  final EmailPasswordSubmitted onEmailSignUpPressed;
   final VoidCallback? onSignOutPressed;
 
   @override
@@ -80,25 +94,89 @@ class AccountPageContent extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           if (!isLoggedIn) ...[
-            _LoginButton(
-              icon: Icons.g_mobiledata,
-              label: 'Google로 계속하기',
-              onPressed: onGooglePressed,
+            _PrimaryAccountButton(
+              icon: Icons.login,
+              label: '로그인',
+              onPressed: () => _openLoginPage(context),
             ),
             const SizedBox(height: 10),
-            _LoginButton(
-              icon: Icons.apple,
-              label: 'Apple로 계속하기',
-              onPressed: onApplePressed,
+            _SecondaryAccountButton(
+              icon: Icons.person_add_alt_1_outlined,
+              label: '회원가입',
+              onPressed: () => _openSignUpPage(context),
             ),
           ] else ...[
-            _AccountActionButton(
+            _SecondaryAccountButton(
               icon: Icons.logout,
               label: '로그아웃',
               onPressed: onSignOutPressed,
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  void _openLoginPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LoginPage(
+          onSubmit: onEmailLoginPressed,
+          onSignUpPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => SignUpPage(
+                  onGooglePressed: onGooglePressed,
+                  onApplePressed: onApplePressed,
+                  onEmailSubmit: onEmailSignUpPressed,
+                  onLoginPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => LoginPage(
+                          onSubmit: onEmailLoginPressed,
+                          onSignUpPressed: () => _openSignUpPage(context),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openSignUpPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SignUpPage(
+          onGooglePressed: onGooglePressed,
+          onApplePressed: onApplePressed,
+          onEmailSubmit: onEmailSignUpPressed,
+          onLoginPressed: () {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => LoginPage(
+                  onSubmit: onEmailLoginPressed,
+                  onSignUpPressed: () {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (_) => SignUpPage(
+                          onGooglePressed: onGooglePressed,
+                          onApplePressed: onApplePressed,
+                          onEmailSubmit: onEmailSignUpPressed,
+                          onLoginPressed: () => _openLoginPage(context),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -244,8 +322,8 @@ class _AccountStatItem extends StatelessWidget {
   }
 }
 
-class _LoginButton extends StatelessWidget {
-  const _LoginButton({
+class _PrimaryAccountButton extends StatelessWidget {
+  const _PrimaryAccountButton({
     required this.icon,
     required this.label,
     required this.onPressed,
@@ -258,15 +336,15 @@ class _LoginButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 56,
-      child: OutlinedButton.icon(
+      height: 54,
+      child: ElevatedButton.icon(
         onPressed: onPressed,
-        icon: Icon(icon, size: 24),
+        icon: Icon(icon),
         label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: blackColor,
-          backgroundColor: whiteColor,
-          side: const BorderSide(color: Color(0xffE6E6E8)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: mainColor,
+          foregroundColor: whiteColor,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -280,8 +358,8 @@ class _LoginButton extends StatelessWidget {
   }
 }
 
-class _AccountActionButton extends StatelessWidget {
-  const _AccountActionButton({
+class _SecondaryAccountButton extends StatelessWidget {
+  const _SecondaryAccountButton({
     required this.icon,
     required this.label,
     required this.onPressed,
@@ -294,7 +372,7 @@ class _AccountActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 52,
+      height: 54,
       child: OutlinedButton.icon(
         onPressed: onPressed,
         icon: Icon(icon),
