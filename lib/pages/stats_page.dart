@@ -135,9 +135,13 @@ class _StatsPageState extends State<StatsPage> {
 
   ButtonStyle get _segmentedButtonStyle {
     return ButtonStyle(
+      backgroundColor: MaterialStateProperty.resolveWith(
+        (states) =>
+            states.contains(MaterialState.selected) ? mainColor : whiteColor,
+      ),
       foregroundColor: MaterialStateProperty.resolveWith(
         (states) =>
-            states.contains(MaterialState.selected) ? mainColor : blackColor,
+            states.contains(MaterialState.selected) ? whiteColor : blackColor,
       ),
       side: MaterialStateProperty.resolveWith(
         (states) => BorderSide(
