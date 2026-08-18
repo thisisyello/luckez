@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/pages/account_page.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({
@@ -53,67 +54,69 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-          children: [
-            _AuthFormCard(
-              children: [
-                _SocialAuthButton(
-                  icon: Icons.g_mobiledata,
-                  label: 'Google로 가입하기',
-                  onPressed: widget.onGooglePressed,
-                ),
-                const SizedBox(height: 10),
-                _SocialAuthButton(
-                  icon: Icons.apple,
-                  label: 'Apple로 가입하기',
-                  onPressed: widget.onApplePressed,
-                ),
-                const SizedBox(height: 16),
-                const _AuthDivider(label: '이메일 가입'),
-                const SizedBox(height: 16),
-                _AccountTextField(
-                  controller: emailController,
-                  label: '이메일',
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 10),
-                _AccountTextField(
-                  controller: passwordController,
-                  label: '비밀번호',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 10),
-                _AccountTextField(
-                  controller: passwordConfirmController,
-                  label: '비밀번호 확인',
-                  obscureText: true,
-                ),
-                if (errorText != null) ...[
+        child: PageContentWidth(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+            children: [
+              _AuthFormCard(
+                children: [
+                  _SocialAuthButton(
+                    icon: Icons.g_mobiledata,
+                    label: 'Google로 가입하기',
+                    onPressed: widget.onGooglePressed,
+                  ),
                   const SizedBox(height: 10),
-                  Text(
-                    errorText!,
-                    style: const TextStyle(
-                      color: redColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  _SocialAuthButton(
+                    icon: Icons.apple,
+                    label: 'Apple로 가입하기',
+                    onPressed: widget.onApplePressed,
+                  ),
+                  const SizedBox(height: 16),
+                  const _AuthDivider(label: '이메일 가입'),
+                  const SizedBox(height: 16),
+                  _AccountTextField(
+                    controller: emailController,
+                    label: '이메일',
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 10),
+                  _AccountTextField(
+                    controller: passwordController,
+                    label: '비밀번호',
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 10),
+                  _AccountTextField(
+                    controller: passwordConfirmController,
+                    label: '비밀번호 확인',
+                    obscureText: true,
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: redColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
+                  ],
+                  const SizedBox(height: 14),
+                  _PrimaryAuthButton(
+                    label: '이메일로 가입하기',
+                    onPressed: _submit,
                   ),
                 ],
-                const SizedBox(height: 14),
-                _PrimaryAuthButton(
-                  label: '이메일로 가입하기',
-                  onPressed: _submit,
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _AuthSwitchText(
-              text: '이미 계정이 있나요?',
-              actionText: '로그인',
-              onPressed: widget.onLoginPressed,
-            ),
-          ],
+              ),
+              const SizedBox(height: 18),
+              _AuthSwitchText(
+                text: '이미 계정이 있나요?',
+                actionText: '로그인',
+                onPressed: widget.onLoginPressed,
+              ),
+            ],
+          ),
         ),
       ),
     );

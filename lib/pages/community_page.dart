@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 
 class CommunityPage extends StatelessWidget {
   const CommunityPage({super.key});
@@ -8,12 +9,14 @@ class CommunityPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return const ColoredBox(
       color: whiteColor,
-      child: Center(
-        child: Text(
-          '커뮤니티 화면 준비 중',
-          style: TextStyle(
-            color: greyColor,
-            fontSize: 16,
+      child: PageContentWidth(
+        child: Center(
+          child: Text(
+            '커뮤니티 화면 준비 중',
+            style: TextStyle(
+              color: greyColor,
+              fontSize: 16,
+            ),
           ),
         ),
       ),

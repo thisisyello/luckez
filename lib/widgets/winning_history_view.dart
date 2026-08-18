@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 class WinningHistoryView extends StatelessWidget {
@@ -15,13 +16,15 @@ class WinningHistoryView extends StatelessWidget {
   Widget build(BuildContext context) {
     final reversedRounds = winningRounds.reversed.toList();
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      itemCount: reversedRounds.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        return _WinningRoundCard(winningRound: reversedRounds[index]);
-      },
+    return PageContentWidth(
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        itemCount: reversedRounds.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 10),
+        itemBuilder: (context, index) {
+          return _WinningRoundCard(winningRound: reversedRounds[index]);
+        },
+      ),
     );
   }
 }

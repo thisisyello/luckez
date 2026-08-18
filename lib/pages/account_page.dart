@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 
 typedef EmailPasswordSubmitted = void Function(String email, String password);
 
@@ -84,35 +85,37 @@ class AccountPageContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-        children: [
-          _AccountStatusCard(
-            isLoggedIn: isLoggedIn,
-            savedNumbersCount: savedNumbersCount,
-            purchasedNumbersCount: purchasedNumbersCount,
-          ),
-          const SizedBox(height: 14),
-          if (!isLoggedIn) ...[
-            _PrimaryAccountButton(
-              icon: Icons.login,
-              label: '로그인',
-              onPressed: () => _openLoginPage(context),
+      child: PageContentWidth(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+          children: [
+            _AccountStatusCard(
+              isLoggedIn: isLoggedIn,
+              savedNumbersCount: savedNumbersCount,
+              purchasedNumbersCount: purchasedNumbersCount,
             ),
-            const SizedBox(height: 10),
-            _SecondaryAccountButton(
-              icon: Icons.person_add_alt_1_outlined,
-              label: '회원가입',
-              onPressed: () => _openSignUpPage(context),
-            ),
-          ] else ...[
-            _SecondaryAccountButton(
-              icon: Icons.logout,
-              label: '로그아웃',
-              onPressed: onSignOutPressed,
-            ),
+            const SizedBox(height: 14),
+            if (!isLoggedIn) ...[
+              _PrimaryAccountButton(
+                icon: Icons.login,
+                label: '로그인',
+                onPressed: () => _openLoginPage(context),
+              ),
+              const SizedBox(height: 10),
+              _SecondaryAccountButton(
+                icon: Icons.person_add_alt_1_outlined,
+                label: '회원가입',
+                onPressed: () => _openSignUpPage(context),
+              ),
+            ] else ...[
+              _SecondaryAccountButton(
+                icon: Icons.logout,
+                label: '로그아웃',
+                onPressed: onSignOutPressed,
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }

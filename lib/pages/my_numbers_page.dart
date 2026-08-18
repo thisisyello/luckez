@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_result_status.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 typedef SavedNumbersUpdated = void Function(String id, List<int> numbers);
@@ -68,36 +69,38 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
 
     return ColoredBox(
       color: const Color(0xffF7F7F8),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: _RoundNavigator(
-              selectedRound: selectedRound,
-              canGoPrevious: canGoPrevious,
-              canGoNext: canGoNext,
-              onPrevious: () {
-                setState(() {
-                  selectedRound -= 1;
-                });
-              },
-              onNext: () {
-                setState(() {
-                  selectedRound += 1;
-                });
-              },
+      child: PageContentWidth(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: _RoundNavigator(
+                selectedRound: selectedRound,
+                canGoPrevious: canGoPrevious,
+                canGoNext: canGoNext,
+                onPrevious: () {
+                  setState(() {
+                    selectedRound -= 1;
+                  });
+                },
+                onNext: () {
+                  setState(() {
+                    selectedRound += 1;
+                  });
+                },
+              ),
             ),
-          ),
-          Expanded(
-            child: _SavedNumbersList(
-              savedNumbers: selectedRoundNumbers,
-              emptyMessage: '$selectedRound회에 저장한 번호가 없습니다',
-              onTogglePurchased: widget.onTogglePurchased,
-              onUpdateSavedNumbers: widget.onUpdateSavedNumbers,
-              onDeleteSavedNumber: widget.onDeleteSavedNumber,
+            Expanded(
+              child: _SavedNumbersList(
+                savedNumbers: selectedRoundNumbers,
+                emptyMessage: '$selectedRound회에 저장한 번호가 없습니다',
+                onTogglePurchased: widget.onTogglePurchased,
+                onUpdateSavedNumbers: widget.onUpdateSavedNumbers,
+                onDeleteSavedNumber: widget.onDeleteSavedNumber,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

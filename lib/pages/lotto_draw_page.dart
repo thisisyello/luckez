@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 class LottoDrawPage extends StatefulWidget {
@@ -48,83 +49,86 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: MediaQuery.of(context).size.height,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+    return ColoredBox(
       color: whiteColor,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 500,
+      child: PageContentWidth(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 500,
+                  ),
+                  child: Row(
+                    children: lottoNumbers
+                        .map(
+                          (number) => Expanded(
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              child: LottoBall(number: number),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
               ),
-              child: Row(
-                children: lottoNumbers
-                    .map(
-                      (number) => Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: LottoBall(number: number),
+              const SizedBox(height: 24),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 320),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: generateLottoNumbers,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: mainColor,
+                          side: const BorderSide(color: mainColor),
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: generateLottoNumbers,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: mainColor,
-                      side: const BorderSide(color: mainColor),
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        child: const Text('다시 추첨'),
                       ),
                     ),
-                    child: const Text('다시 추첨'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: saveCurrentLottoNumbers,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: mainColor,
-                      foregroundColor: whiteColor,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: saveCurrentLottoNumbers,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mainColor,
+                          foregroundColor: whiteColor,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 24),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('저장하기'),
                       ),
                     ),
-                    child: const Text('저장하기'),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Text(
+                  '저장한 번호 ${widget.savedNumbersCount}개',
+                  style: const TextStyle(
+                    color: greyColor,
+                    fontSize: 14,
                   ),
                 ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: Text(
-              '저장한 번호 ${widget.savedNumbersCount}개',
-              style: const TextStyle(
-                color: greyColor,
-                fontSize: 14,
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

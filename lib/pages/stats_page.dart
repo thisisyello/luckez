@@ -3,6 +3,7 @@ import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/lotto_number_frequency.dart';
 import 'package:luckez/services/lotto_statistics_service.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/winning_history_view.dart';
 
 enum _StatsView {
@@ -47,71 +48,73 @@ class _StatsPageState extends State<StatsPage> {
       color: const Color(0xffF7F7F8),
       child: SafeArea(
         top: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _StatsViewSwitcher(
-                    selectedView: selectedView,
-                    onChanged: (view) {
-                      setState(() {
-                        selectedView = view;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 6),
-                  Center(
-                    child: Text(
-                      _roundRangeLabel,
-                      style: const TextStyle(
-                        color: greyColor,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  if (isFrequencyView) ...[
-                    const SizedBox(height: 12),
-                    SegmentedButton<bool>(
-                      segments: const [
-                        ButtonSegment(
-                          value: false,
-                          icon: Icon(Icons.filter_6_outlined),
-                          label: Text('보너스 제외'),
-                        ),
-                        ButtonSegment(
-                          value: true,
-                          icon: Icon(Icons.add_circle_outline),
-                          label: Text('보너스 포함'),
-                        ),
-                      ],
-                      selected: {includeBonusNumber},
-                      style: _segmentedButtonStyle,
-                      onSelectionChanged: (selection) {
+        child: PageContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _StatsViewSwitcher(
+                      selectedView: selectedView,
+                      onChanged: (view) {
                         setState(() {
-                          includeBonusNumber = selection.first;
+                          selectedView = view;
                         });
                       },
                     ),
+                    const SizedBox(height: 6),
+                    Center(
+                      child: Text(
+                        _roundRangeLabel,
+                        style: const TextStyle(
+                          color: greyColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    if (isFrequencyView) ...[
+                      const SizedBox(height: 12),
+                      SegmentedButton<bool>(
+                        segments: const [
+                          ButtonSegment(
+                            value: false,
+                            icon: Icon(Icons.filter_6_outlined),
+                            label: Text('보너스 제외'),
+                          ),
+                          ButtonSegment(
+                            value: true,
+                            icon: Icon(Icons.add_circle_outline),
+                            label: Text('보너스 포함'),
+                          ),
+                        ],
+                        selected: {includeBonusNumber},
+                        style: _segmentedButtonStyle,
+                        onSelectionChanged: (selection) {
+                          setState(() {
+                            includeBonusNumber = selection.first;
+                          });
+                        },
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Expanded(
-              child: _StatsBody(
-                isLoading: widget.isLoading,
-                hasError: widget.hasError,
-                isFrequencyView: isFrequencyView,
-                frequencies: frequencies,
-                maxCount: maxCount,
-                winningRounds: widget.winningRounds,
+              Expanded(
+                child: _StatsBody(
+                  isLoading: widget.isLoading,
+                  hasError: widget.hasError,
+                  isFrequencyView: isFrequencyView,
+                  frequencies: frequencies,
+                  maxCount: maxCount,
+                  winningRounds: widget.winningRounds,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

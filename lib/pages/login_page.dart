@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/pages/account_page.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({
@@ -46,39 +47,41 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-          children: [
-            _AuthFormCard(
-              children: [
-                _AccountTextField(
-                  controller: emailController,
-                  label: '이메일',
-                  keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 10),
-                _AccountTextField(
-                  controller: passwordController,
-                  label: '비밀번호',
-                  obscureText: true,
-                ),
-                const SizedBox(height: 14),
-                _PrimaryAuthButton(
-                  label: '로그인',
-                  onPressed: () => widget.onSubmit(
-                    emailController.text.trim(),
-                    passwordController.text,
+        child: PageContentWidth(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+            children: [
+              _AuthFormCard(
+                children: [
+                  _AccountTextField(
+                    controller: emailController,
+                    label: '이메일',
+                    keyboardType: TextInputType.emailAddress,
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            _AuthSwitchText(
-              text: '계정이 없나요?',
-              actionText: '회원가입',
-              onPressed: widget.onSignUpPressed,
-            ),
-          ],
+                  const SizedBox(height: 10),
+                  _AccountTextField(
+                    controller: passwordController,
+                    label: '비밀번호',
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 14),
+                  _PrimaryAuthButton(
+                    label: '로그인',
+                    onPressed: () => widget.onSubmit(
+                      emailController.text.trim(),
+                      passwordController.text,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _AuthSwitchText(
+                text: '계정이 없나요?',
+                actionText: '회원가입',
+                onPressed: widget.onSignUpPressed,
+              ),
+            ],
+          ),
         ),
       ),
     );
