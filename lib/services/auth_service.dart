@@ -1,10 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
-  AuthService({FirebaseAuth? firebaseAuth})
-      : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance;
+  AuthService({
+    FirebaseAuth? firebaseAuth,
+    GoogleSignIn? googleSignIn,
+  })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
+        _googleSignIn = googleSignIn ?? GoogleSignIn();
 
   final FirebaseAuth _firebaseAuth;
+  final GoogleSignIn _googleSignIn;
 
   User? get currentUser => _firebaseAuth.currentUser;
 
@@ -30,7 +36,36 @@ class AuthService {
     );
   }
 
-  Future<void> signOut() {
-    return _firebaseAuth.signOut();
+  Future<UserCredential> signInWithGoogle() async {
+    final googleProvider = GoogleAuthProvider();
+
+    if (kIsWeb) {
+      return _firebaseAuth.signInWithPopup(googleProvider);
+    }
+
+    final googleUser = await _googleSignIn.signIn();
+
+    if (googleUser == null) {
+      throw const AuthCancelledException();
+    }
+
+    final googleAuth = await googleUser.authentication;
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    return _firebaseAuth.signInWithCredential(credential);
   }
+
+  Future<void> signOut() async {
+    await Future.wait([
+      _firebaseAuth.signOut(),
+      _googleSignIn.signOut(),
+    ]);
+  }
+}
+
+class AuthCancelledException implements Exception {
+  const AuthCancelledException();
 }

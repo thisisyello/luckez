@@ -346,7 +346,7 @@ class _MainShellPageState extends State<MainShellPage> {
                   isLoggedIn: false,
                   savedNumbersCount: savedNumbers.length,
                   purchasedNumbersCount: _purchasedNumbersCount,
-                  onGooglePressed: _showGoogleSignInPreparing,
+                  onGooglePressed: _signInWithGoogle,
                   onApplePressed: _showAppleSignInPreparing,
                   onEmailLoginPressed: _signInWithEmail,
                   onEmailSignUpPressed: _signUpWithEmail,
@@ -431,7 +431,7 @@ class _MainShellPageState extends State<MainShellPage> {
           isLoggedIn: currentUserId != null,
           savedNumbersCount: savedNumbers.length,
           purchasedNumbersCount: _purchasedNumbersCount,
-          onGooglePressed: _showGoogleSignInPreparing,
+          onGooglePressed: _signInWithGoogle,
           onApplePressed: _showAppleSignInPreparing,
           onEmailLoginPressed: _signInWithEmail,
           onEmailSignUpPressed: _signUpWithEmail,
@@ -459,8 +459,31 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  void _showGoogleSignInPreparing() {
-    _showComingSoonMessage('Google 로그인 준비 중');
+  Future<void> _signInWithGoogle() async {
+    try {
+      await _authService.signInWithGoogle();
+
+      if (!mounted) {
+        return;
+      }
+
+      _closeAccountFlow();
+      _showComingSoonMessage('Google 계정으로 로그인됐어요');
+    } on AuthCancelledException {
+      return;
+    } on FirebaseAuthException catch (error) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage(_authErrorMessage(error));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('Google 로그인에 실패했어요');
+    }
   }
 
   void _showAppleSignInPreparing() {

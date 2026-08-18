@@ -12,7 +12,20 @@
           "package_name": "com.thisisyello.luckez"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "475615354311-k8ji58qaofjgphkfidrsa6vlq8foev1v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thisisyello.luckez",
+            "certificate_hash": "ca0c921c0ad3ad85bfcf5bf3f73d4ab7328a3b4b"
+          }
+        },
+        {
+          "client_id": "475615354311-luooga4idohcktn87bgquihmfr1thtjm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBJkz1FDBzmuBjVsbiK8Xg4blfEusTKecE"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "475615354311-luooga4idohcktn87bgquihmfr1thtjm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
