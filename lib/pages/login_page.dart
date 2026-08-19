@@ -7,10 +7,12 @@ class LoginPage extends StatefulWidget {
   const LoginPage({
     super.key,
     required this.onSubmit,
+    required this.onGooglePressed,
     required this.onSignUpPressed,
   });
 
   final EmailPasswordSubmitted onSubmit;
+  final VoidCallback onGooglePressed;
   final VoidCallback onSignUpPressed;
 
   @override
@@ -53,6 +55,14 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               _AuthFormCard(
                 children: [
+                  _SocialAuthButton(
+                    icon: Icons.g_mobiledata,
+                    label: 'Google로 로그인하기',
+                    onPressed: widget.onGooglePressed,
+                  ),
+                  const SizedBox(height: 16),
+                  const _AuthDivider(label: '이메일 로그인'),
+                  const SizedBox(height: 16),
                   _AccountTextField(
                     controller: emailController,
                     label: '이메일',
@@ -186,6 +196,69 @@ class _PrimaryAuthButton extends StatelessWidget {
         ),
         child: Text(label),
       ),
+    );
+  }
+}
+
+class _SocialAuthButton extends StatelessWidget {
+  const _SocialAuthButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 24),
+        label: Text(label),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: blackColor,
+          backgroundColor: whiteColor,
+          side: const BorderSide(color: Color(0xffE6E6E8)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          textStyle: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AuthDivider extends StatelessWidget {
+  const _AuthDivider({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider(color: Color(0xffE6E6E8))),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: greyColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider(color: Color(0xffE6E6E8))),
+      ],
     );
   }
 }

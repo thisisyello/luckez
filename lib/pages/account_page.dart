@@ -120,6 +120,7 @@ class AccountPageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => LoginPage(
           onSubmit: onEmailLoginPressed,
+          onGooglePressed: onGooglePressed,
           onSignUpPressed: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
@@ -131,6 +132,7 @@ class AccountPageContent extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => LoginPage(
                           onSubmit: onEmailLoginPressed,
+                          onGooglePressed: onGooglePressed,
                           onSignUpPressed: () => _openSignUpPage(context),
                         ),
                       ),
@@ -156,6 +158,7 @@ class AccountPageContent extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) => LoginPage(
                   onSubmit: onEmailLoginPressed,
+                  onGooglePressed: onGooglePressed,
                   onSignUpPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
