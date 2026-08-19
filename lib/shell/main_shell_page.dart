@@ -401,7 +401,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: whiteColor,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.person_outline),
