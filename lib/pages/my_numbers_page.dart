@@ -46,20 +46,9 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
     }
   }
 
-  int get minRound {
-    final savedRounds = widget.savedNumbers
-        .map((savedNumber) => savedNumber.round)
-        .whereType<int>()
-        .toList();
+  static const minSelectableRound = 1;
 
-    if (savedRounds.isEmpty) {
-      return widget.activeRound;
-    }
-
-    return savedRounds.reduce((a, b) => a < b ? a : b);
-  }
-
-  bool get canGoPrevious => selectedRound > minRound;
+  bool get canGoPrevious => selectedRound > minSelectableRound;
   bool get canGoNext => selectedRound < widget.activeRound;
 
   @override
@@ -90,6 +79,7 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
                     selectedRound += 1;
                   });
                 },
+                onRoundPressed: _showRoundPicker,
               ),
             ),
             Expanded(
@@ -106,6 +96,30 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
       ),
     );
   }
+
+  Future<void> _showRoundPicker() async {
+    final round = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.45),
+      builder: (context) {
+        return _RoundPickerSheet(
+          initialRound: selectedRound,
+          minRound: minSelectableRound,
+          maxRound: widget.activeRound,
+        );
+      },
+    );
+
+    if (round == null) {
+      return;
+    }
+
+    setState(() {
+      selectedRound = round;
+    });
+  }
 }
 
 class _RoundNavigator extends StatelessWidget {
@@ -116,6 +130,7 @@ class _RoundNavigator extends StatelessWidget {
     required this.canGoNext,
     required this.onPrevious,
     required this.onNext,
+    required this.onRoundPressed,
   });
 
   static const _roundDateService = LottoRoundDateService();
@@ -126,6 +141,7 @@ class _RoundNavigator extends StatelessWidget {
   final bool canGoNext;
   final VoidCallback onPrevious;
   final VoidCallback onNext;
+  final VoidCallback onRoundPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -136,24 +152,26 @@ class _RoundNavigator extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
-              onPressed: canGoPrevious ? onPrevious : null,
+              onPressed: canGoNext ? onNext : null,
               icon: const Icon(Icons.chevron_left),
             ),
             SizedBox(
               width: 120,
-              child: Center(
-                child: Text(
-                  '$selectedRound회',
-                  style: const TextStyle(
-                    color: blackColor,
+              child: TextButton(
+                onPressed: onRoundPressed,
+                style: TextButton.styleFrom(
+                  foregroundColor: blackColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  textStyle: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
+                child: Text('$selectedRound회'),
               ),
             ),
             IconButton(
-              onPressed: canGoNext ? onNext : null,
+              onPressed: canGoPrevious ? onPrevious : null,
               icon: const Icon(Icons.chevron_right),
             ),
           ],
@@ -171,6 +189,152 @@ class _RoundNavigator extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _RoundPickerSheet extends StatefulWidget {
+  const _RoundPickerSheet({
+    required this.initialRound,
+    required this.minRound,
+    required this.maxRound,
+  });
+
+  final int initialRound;
+  final int minRound;
+  final int maxRound;
+
+  @override
+  State<_RoundPickerSheet> createState() => _RoundPickerSheetState();
+}
+
+class _RoundPickerSheetState extends State<_RoundPickerSheet> {
+  late final TextEditingController controller;
+  String? errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController(text: widget.initialRound.toString());
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final bottomPadding = mediaQuery.viewInsets.bottom;
+    final sheetHeight = mediaQuery.size.height * 0.5;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomPadding),
+      child: SizedBox(
+        height: sheetHeight,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: whiteColor,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: PageContentWidth(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      '회차 선택',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: blackColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        suffixText: '회',
+                        filled: true,
+                        fillColor: const Color(0xffF7F7F8),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(color: mainColor),
+                        ),
+                      ),
+                      onSubmitted: (_) => _submit(),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        errorText!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: redColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: mainColor,
+                        foregroundColor: whiteColor,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text('이동'),
+                    ),
+                    const SizedBox(height: 4),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, widget.maxRound),
+                      style: TextButton.styleFrom(
+                        foregroundColor: greyColor,
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: const Text('현재 회차로 이동'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _submit() {
+    final round = int.tryParse(controller.text.trim());
+
+    if (round == null || round < widget.minRound || round > widget.maxRound) {
+      setState(() {
+        errorText = '${widget.minRound}회부터 ${widget.maxRound}회까지 입력해주세요';
+      });
+      return;
+    }
+
+    Navigator.pop(context, round);
   }
 }
 
