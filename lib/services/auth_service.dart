@@ -7,10 +7,10 @@ class AuthService {
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn;
 
   final FirebaseAuth _firebaseAuth;
-  final GoogleSignIn _googleSignIn;
+  GoogleSignIn? _googleSignIn;
 
   User? get currentUser => _firebaseAuth.currentUser;
 
@@ -43,7 +43,8 @@ class AuthService {
       return _firebaseAuth.signInWithPopup(googleProvider);
     }
 
-    final googleUser = await _googleSignIn.signIn();
+    final googleSignIn = _googleSignIn ??= GoogleSignIn();
+    final googleUser = await googleSignIn.signIn();
 
     if (googleUser == null) {
       throw const AuthCancelledException();
@@ -59,10 +60,11 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await Future.wait([
-      _firebaseAuth.signOut(),
-      _googleSignIn.signOut(),
-    ]);
+    await _firebaseAuth.signOut();
+
+    if (!kIsWeb) {
+      await _googleSignIn?.signOut();
+    }
   }
 }
 
