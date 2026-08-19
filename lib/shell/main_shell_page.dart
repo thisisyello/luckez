@@ -347,7 +347,6 @@ class _MainShellPageState extends State<MainShellPage> {
                   savedNumbersCount: savedNumbers.length,
                   purchasedNumbersCount: _purchasedNumbersCount,
                   onGooglePressed: _signInWithGoogle,
-                  onApplePressed: _showAppleSignInPreparing,
                   onEmailLoginPressed: _signInWithEmail,
                   onEmailSignUpPressed: _signUpWithEmail,
                 )
@@ -432,7 +431,6 @@ class _MainShellPageState extends State<MainShellPage> {
           savedNumbersCount: savedNumbers.length,
           purchasedNumbersCount: _purchasedNumbersCount,
           onGooglePressed: _signInWithGoogle,
-          onApplePressed: _showAppleSignInPreparing,
           onEmailLoginPressed: _signInWithEmail,
           onEmailSignUpPressed: _signUpWithEmail,
           onSignOutPressed: currentUserId == null ? null : _signOut,
@@ -484,10 +482,6 @@ class _MainShellPageState extends State<MainShellPage> {
 
       _showComingSoonMessage('Google 로그인에 실패했어요');
     }
-  }
-
-  void _showAppleSignInPreparing() {
-    _showComingSoonMessage('Apple 로그인 준비 중');
   }
 
   Future<void> _signInWithEmail(String email, String password) async {

@@ -7,13 +7,11 @@ class SignUpPage extends StatefulWidget {
   const SignUpPage({
     super.key,
     required this.onGooglePressed,
-    required this.onApplePressed,
     required this.onEmailSubmit,
     required this.onLoginPressed,
   });
 
   final VoidCallback onGooglePressed;
-  final VoidCallback onApplePressed;
   final EmailPasswordSubmitted onEmailSubmit;
   final VoidCallback onLoginPressed;
 
@@ -64,12 +62,6 @@ class _SignUpPageState extends State<SignUpPage> {
                     icon: Icons.g_mobiledata,
                     label: 'Google로 가입하기',
                     onPressed: widget.onGooglePressed,
-                  ),
-                  const SizedBox(height: 10),
-                  _SocialAuthButton(
-                    icon: Icons.apple,
-                    label: 'Apple로 가입하기',
-                    onPressed: widget.onApplePressed,
                   ),
                   const SizedBox(height: 16),
                   const _AuthDivider(label: '이메일 가입'),

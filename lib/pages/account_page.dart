@@ -13,7 +13,6 @@ class AccountPage extends StatelessWidget {
     required this.savedNumbersCount,
     required this.purchasedNumbersCount,
     required this.onGooglePressed,
-    required this.onApplePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
     this.onSignOutPressed,
@@ -23,7 +22,6 @@ class AccountPage extends StatelessWidget {
   final int savedNumbersCount;
   final int purchasedNumbersCount;
   final VoidCallback onGooglePressed;
-  final VoidCallback onApplePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
   final VoidCallback? onSignOutPressed;
@@ -50,7 +48,6 @@ class AccountPage extends StatelessWidget {
         savedNumbersCount: savedNumbersCount,
         purchasedNumbersCount: purchasedNumbersCount,
         onGooglePressed: onGooglePressed,
-        onApplePressed: onApplePressed,
         onEmailLoginPressed: onEmailLoginPressed,
         onEmailSignUpPressed: onEmailSignUpPressed,
         onSignOutPressed: onSignOutPressed,
@@ -66,7 +63,6 @@ class AccountPageContent extends StatelessWidget {
     required this.savedNumbersCount,
     required this.purchasedNumbersCount,
     required this.onGooglePressed,
-    required this.onApplePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
     this.onSignOutPressed,
@@ -76,7 +72,6 @@ class AccountPageContent extends StatelessWidget {
   final int savedNumbersCount;
   final int purchasedNumbersCount;
   final VoidCallback onGooglePressed;
-  final VoidCallback onApplePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
   final VoidCallback? onSignOutPressed;
@@ -130,7 +125,6 @@ class AccountPageContent extends StatelessWidget {
               MaterialPageRoute(
                 builder: (_) => SignUpPage(
                   onGooglePressed: onGooglePressed,
-                  onApplePressed: onApplePressed,
                   onEmailSubmit: onEmailSignUpPressed,
                   onLoginPressed: () {
                     Navigator.of(context).pushReplacement(
@@ -156,7 +150,6 @@ class AccountPageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => SignUpPage(
           onGooglePressed: onGooglePressed,
-          onApplePressed: onApplePressed,
           onEmailSubmit: onEmailSignUpPressed,
           onLoginPressed: () {
             Navigator.of(context).pushReplacement(
@@ -168,7 +161,6 @@ class AccountPageContent extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => SignUpPage(
                           onGooglePressed: onGooglePressed,
-                          onApplePressed: onApplePressed,
                           onEmailSubmit: onEmailSignUpPressed,
                           onLoginPressed: () => _openLoginPage(context),
                         ),
