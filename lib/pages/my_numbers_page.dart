@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_result_status.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
+import 'package:luckez/services/lotto_round_date_service.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
@@ -76,6 +77,7 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: _RoundNavigator(
                 selectedRound: selectedRound,
+                latestDrawRound: widget.activeRound - 1,
                 canGoPrevious: canGoPrevious,
                 canGoNext: canGoNext,
                 onPrevious: () {
@@ -109,13 +111,17 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
 class _RoundNavigator extends StatelessWidget {
   const _RoundNavigator({
     required this.selectedRound,
+    required this.latestDrawRound,
     required this.canGoPrevious,
     required this.canGoNext,
     required this.onPrevious,
     required this.onNext,
   });
 
+  static const _roundDateService = LottoRoundDateService();
+
   final int selectedRound;
+  final int latestDrawRound;
   final bool canGoPrevious;
   final bool canGoNext;
   final VoidCallback onPrevious;
@@ -123,29 +129,45 @@ class _RoundNavigator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
-          onPressed: canGoPrevious ? onPrevious : null,
-          icon: const Icon(Icons.chevron_left),
-        ),
-        SizedBox(
-          width: 120,
-          child: Center(
-            child: Text(
-              '$selectedRound회',
-              style: const TextStyle(
-                color: blackColor,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              onPressed: canGoPrevious ? onPrevious : null,
+              icon: const Icon(Icons.chevron_left),
+            ),
+            SizedBox(
+              width: 120,
+              child: Center(
+                child: Text(
+                  '$selectedRound회',
+                  style: const TextStyle(
+                    color: blackColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
-          ),
+            IconButton(
+              onPressed: canGoNext ? onNext : null,
+              icon: const Icon(Icons.chevron_right),
+            ),
+          ],
         ),
-        IconButton(
-          onPressed: canGoNext ? onNext : null,
-          icon: const Icon(Icons.chevron_right),
+        Text(
+          _roundDateService.getDrawDateLabel(
+            round: selectedRound,
+            latestDrawRound: latestDrawRound,
+          ),
+          style: const TextStyle(
+            color: greyColor,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
