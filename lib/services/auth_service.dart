@@ -7,10 +7,11 @@ class AuthService {
     FirebaseAuth? firebaseAuth,
     GoogleSignIn? googleSignIn,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn;
+        _googleSignIn = googleSignIn ?? GoogleSignIn.instance;
 
   final FirebaseAuth _firebaseAuth;
-  GoogleSignIn? _googleSignIn;
+  final GoogleSignIn _googleSignIn;
+  Future<void>? _googleSignInInitializeFuture;
 
   User? get currentUser => _firebaseAuth.currentUser;
 
@@ -43,16 +44,22 @@ class AuthService {
       return _firebaseAuth.signInWithPopup(googleProvider);
     }
 
-    final googleSignIn = _googleSignIn ??= GoogleSignIn();
-    final googleUser = await googleSignIn.signIn();
+    await _ensureGoogleSignInInitialized();
 
-    if (googleUser == null) {
-      throw const AuthCancelledException();
+    final GoogleSignInAccount googleUser;
+
+    try {
+      googleUser = await _googleSignIn.authenticate();
+    } on GoogleSignInException catch (error) {
+      if (error.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthCancelledException();
+      }
+
+      rethrow;
     }
 
-    final googleAuth = await googleUser.authentication;
+    final googleAuth = googleUser.authentication;
     final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
@@ -63,8 +70,13 @@ class AuthService {
     await _firebaseAuth.signOut();
 
     if (!kIsWeb) {
-      await _googleSignIn?.signOut();
+      await _ensureGoogleSignInInitialized();
+      await _googleSignIn.signOut();
     }
+  }
+
+  Future<void> _ensureGoogleSignInInitialized() {
+    return _googleSignInInitializeFuture ??= _googleSignIn.initialize();
   }
 }
 
