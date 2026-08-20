@@ -13,7 +13,7 @@ class LottoBall extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final ballSize = constraints.maxWidth.clamp(36.0, 56.0);
+        final ballSize = constraints.maxWidth.clamp(32.0, 48.0);
         final fontSize = (ballSize * 0.4).clamp(16.0, 22.0);
 
         return Center(
