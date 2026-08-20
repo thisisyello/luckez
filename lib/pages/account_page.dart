@@ -217,7 +217,7 @@ class _AccountStatusCard extends StatelessWidget {
                 height: 42,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: mainColor.withOpacity(0.12),
+                  color: mainColor.withValues(alpha: 0.12),
                 ),
                 child: Icon(
                   isLoggedIn ? Icons.person : Icons.person_outline,

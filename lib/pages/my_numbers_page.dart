@@ -102,7 +102,7 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withOpacity(0.45),
+      barrierColor: Colors.black.withValues(alpha: 0.45),
       builder: (context) {
         return _RoundPickerSheet(
           initialRound: selectedRound,
@@ -633,9 +633,9 @@ class _ResultSummary extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: resultColor.withOpacity(0.1),
+                color: resultColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: resultColor.withOpacity(0.28)),
+                border: Border.all(color: resultColor.withValues(alpha: 0.28)),
               ),
               child: Text(
                 _resultStatusLabel(savedNumber.resultStatus),

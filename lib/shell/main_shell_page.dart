@@ -367,7 +367,7 @@ class _MainShellPageState extends State<MainShellPage> {
             selectedIndex = index;
           });
         },
-        indicatorColor: mainColor.withOpacity(0.12),
+        indicatorColor: mainColor.withValues(alpha: 0.12),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -597,7 +597,7 @@ class _PurchaseTabIcon extends StatelessWidget {
       height: 34,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isSelected ? mainColor : mainColor.withOpacity(0.12),
+        color: isSelected ? mainColor : mainColor.withValues(alpha: 0.12),
       ),
       child: Icon(
         Icons.shopping_bag_outlined,
