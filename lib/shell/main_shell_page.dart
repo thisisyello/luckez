@@ -434,6 +434,8 @@ class _MainShellPageState extends State<MainShellPage> {
           onEmailLoginPressed: _signInWithEmail,
           onEmailSignUpPressed: _signUpWithEmail,
           onSignOutPressed: currentUserId == null ? null : _signOut,
+          onWinningRoundSubmit: _saveWinningRound,
+          initialWinningRound: roundInfo.latestDrawRound + 1,
         ),
       ),
     );
@@ -552,6 +554,25 @@ class _MainShellPageState extends State<MainShellPage> {
 
   void _closeAccountFlow() {
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Future<void> _saveWinningRound(LottoWinningRound winningRound) async {
+    try {
+      await _winningRoundRepository.saveWinningRound(winningRound);
+    } catch (_) {
+      rethrow;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${winningRound.round}회 당첨번호를 등록했어요'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
   }
 
   String _authErrorMessage(FirebaseAuthException error) {

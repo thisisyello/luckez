@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
+import 'package:luckez/pages/winning_round_admin_page.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 
 typedef EmailPasswordSubmitted = void Function(String email, String password);
+typedef WinningRoundSubmitted = Future<void> Function(
+  LottoWinningRound winningRound,
+);
 
 class AccountPage extends StatelessWidget {
   const AccountPage({
@@ -16,6 +21,8 @@ class AccountPage extends StatelessWidget {
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
     this.onSignOutPressed,
+    this.onWinningRoundSubmit,
+    this.initialWinningRound,
   });
 
   final bool isLoggedIn;
@@ -25,6 +32,8 @@ class AccountPage extends StatelessWidget {
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
   final VoidCallback? onSignOutPressed;
+  final WinningRoundSubmitted? onWinningRoundSubmit;
+  final int? initialWinningRound;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +60,8 @@ class AccountPage extends StatelessWidget {
         onEmailLoginPressed: onEmailLoginPressed,
         onEmailSignUpPressed: onEmailSignUpPressed,
         onSignOutPressed: onSignOutPressed,
+        onWinningRoundSubmit: onWinningRoundSubmit,
+        initialWinningRound: initialWinningRound,
       ),
     );
   }
@@ -66,6 +77,8 @@ class AccountPageContent extends StatelessWidget {
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
     this.onSignOutPressed,
+    this.onWinningRoundSubmit,
+    this.initialWinningRound,
   });
 
   final bool isLoggedIn;
@@ -75,6 +88,8 @@ class AccountPageContent extends StatelessWidget {
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
   final VoidCallback? onSignOutPressed;
+  final WinningRoundSubmitted? onWinningRoundSubmit;
+  final int? initialWinningRound;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +118,13 @@ class AccountPageContent extends StatelessWidget {
                 onPressed: () => _openSignUpPage(context),
               ),
             ] else ...[
+              if (onWinningRoundSubmit != null &&
+                  initialWinningRound != null) ...[
+                _TemporaryAdminButton(
+                  onPressed: () => _openWinningRoundAdminPage(context),
+                ),
+                const SizedBox(height: 10),
+              ],
               _SecondaryAccountButton(
                 icon: Icons.logout,
                 label: '로그아웃',
@@ -142,6 +164,24 @@ class AccountPageContent extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  void _openWinningRoundAdminPage(BuildContext context) {
+    final onSubmit = onWinningRoundSubmit;
+    final initialRound = initialWinningRound;
+
+    if (onSubmit == null || initialRound == null) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => WinningRoundAdminPage(
+          initialRound: initialRound,
+          onSubmit: onSubmit,
         ),
       ),
     );
@@ -315,6 +355,31 @@ class _AccountStatItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TemporaryAdminButton extends StatelessWidget {
+  const _TemporaryAdminButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.add_circle_outline, size: 18),
+        label: const Text('당첨번호 등록'),
+        style: TextButton.styleFrom(
+          foregroundColor: greyColor,
+          textStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }
