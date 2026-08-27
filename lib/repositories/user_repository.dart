@@ -7,6 +7,15 @@ class UserRepository {
 
   final FirebaseFirestore _firestore;
 
+  Stream<String> watchUserRole(String userId) {
+    return _usersCollection().doc(userId).snapshots().map((snapshot) {
+      final data = snapshot.data();
+      final role = data == null ? null : data['role'];
+
+      return role is String ? role : 'user';
+    });
+  }
+
   Future<void> ensureUserProfile(User user) async {
     final userRef = _usersCollection().doc(user.uid);
     final snapshot = await userRef.get();

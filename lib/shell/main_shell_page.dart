@@ -38,6 +38,7 @@ class _MainShellPageState extends State<MainShellPage> {
   StreamSubscription<User?>? authSubscription;
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
   StreamSubscription<List<LottoWinningRound>>? winningRoundsSubscription;
+  StreamSubscription<String>? userRoleSubscription;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
     latestDrawRound: initialLatestDrawRound,
@@ -46,6 +47,7 @@ class _MainShellPageState extends State<MainShellPage> {
   List<LottoWinningRound> winningRounds = [];
   bool isWinningRoundsLoading = true;
   bool hasWinningRoundsError = false;
+  String currentUserRole = 'user';
 
   @override
   void initState() {
@@ -100,16 +102,20 @@ class _MainShellPageState extends State<MainShellPage> {
 
         if (user == null) {
           savedNumbers.clear();
+          currentUserRole = 'user';
         }
       });
 
       if (user == null) {
         savedNumbersSubscription?.cancel();
         savedNumbersSubscription = null;
+        userRoleSubscription?.cancel();
+        userRoleSubscription = null;
         return;
       }
 
       _ensureUserProfile(user);
+      _listenUserRole(user.uid);
       _listenSavedNumbers(user.uid);
     });
   }
@@ -119,6 +125,7 @@ class _MainShellPageState extends State<MainShellPage> {
     authSubscription?.cancel();
     savedNumbersSubscription?.cancel();
     winningRoundsSubscription?.cancel();
+    userRoleSubscription?.cancel();
     super.dispose();
   }
 
@@ -132,6 +139,30 @@ class _MainShellPageState extends State<MainShellPage> {
 
       _showComingSoonMessage('회원 정보를 동기화하지 못했어요');
     }
+  }
+
+  void _listenUserRole(String userId) {
+    userRoleSubscription?.cancel();
+    userRoleSubscription = _userRepository.watchUserRole(userId).listen(
+      (role) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          currentUserRole = role;
+        });
+      },
+      onError: (_) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          currentUserRole = 'user';
+        });
+      },
+    );
   }
 
   void _listenSavedNumbers(String userId) {
@@ -438,6 +469,10 @@ class _MainShellPageState extends State<MainShellPage> {
     return savedNumbers.where((savedNumber) => savedNumber.isPurchased).length;
   }
 
+  bool get _isAdmin {
+    return currentUserRole == 'admin';
+  }
+
   bool _isWinningRoundRegistered(int round) {
     return _findWinningRound(round) != null;
   }
@@ -453,9 +488,9 @@ class _MainShellPageState extends State<MainShellPage> {
           onEmailLoginPressed: _signInWithEmail,
           onEmailSignUpPressed: _signUpWithEmail,
           onSignOutPressed: currentUserId == null ? null : _signOut,
-          onWinningRoundSubmit: _saveWinningRound,
-          initialWinningRound: roundInfo.latestDrawRound + 1,
-          isWinningRoundRegistered: _isWinningRoundRegistered,
+          onWinningRoundSubmit: _isAdmin ? _saveWinningRound : null,
+          initialWinningRound: _isAdmin ? roundInfo.latestDrawRound + 1 : null,
+          isWinningRoundRegistered: _isAdmin ? _isWinningRoundRegistered : null,
         ),
       ),
     );
