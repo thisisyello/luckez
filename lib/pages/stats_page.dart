@@ -30,7 +30,7 @@ class StatsPage extends StatefulWidget {
 class _StatsPageState extends State<StatsPage> {
   static const _statisticsService = LottoStatisticsService();
 
-  _StatsView selectedView = _StatsView.frequency;
+  _StatsView selectedView = _StatsView.history;
   bool includeBonusNumber = false;
 
   @override
