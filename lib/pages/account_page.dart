@@ -10,6 +10,7 @@ typedef EmailPasswordSubmitted = void Function(String email, String password);
 typedef WinningRoundSubmitted = Future<void> Function(
   LottoWinningRound winningRound,
 );
+typedef WinningRoundRegisteredCheck = bool Function(int round);
 
 class AccountPage extends StatelessWidget {
   const AccountPage({
@@ -23,6 +24,7 @@ class AccountPage extends StatelessWidget {
     this.onSignOutPressed,
     this.onWinningRoundSubmit,
     this.initialWinningRound,
+    this.isWinningRoundRegistered,
   });
 
   final bool isLoggedIn;
@@ -34,6 +36,7 @@ class AccountPage extends StatelessWidget {
   final VoidCallback? onSignOutPressed;
   final WinningRoundSubmitted? onWinningRoundSubmit;
   final int? initialWinningRound;
+  final WinningRoundRegisteredCheck? isWinningRoundRegistered;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +65,7 @@ class AccountPage extends StatelessWidget {
         onSignOutPressed: onSignOutPressed,
         onWinningRoundSubmit: onWinningRoundSubmit,
         initialWinningRound: initialWinningRound,
+        isWinningRoundRegistered: isWinningRoundRegistered,
       ),
     );
   }
@@ -79,6 +83,7 @@ class AccountPageContent extends StatelessWidget {
     this.onSignOutPressed,
     this.onWinningRoundSubmit,
     this.initialWinningRound,
+    this.isWinningRoundRegistered,
   });
 
   final bool isLoggedIn;
@@ -90,6 +95,7 @@ class AccountPageContent extends StatelessWidget {
   final VoidCallback? onSignOutPressed;
   final WinningRoundSubmitted? onWinningRoundSubmit;
   final int? initialWinningRound;
+  final WinningRoundRegisteredCheck? isWinningRoundRegistered;
 
   @override
   Widget build(BuildContext context) {
@@ -172,8 +178,9 @@ class AccountPageContent extends StatelessWidget {
   void _openWinningRoundAdminPage(BuildContext context) {
     final onSubmit = onWinningRoundSubmit;
     final initialRound = initialWinningRound;
+    final isRegistered = isWinningRoundRegistered;
 
-    if (onSubmit == null || initialRound == null) {
+    if (onSubmit == null || initialRound == null || isRegistered == null) {
       return;
     }
 
@@ -181,6 +188,7 @@ class AccountPageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => WinningRoundAdminPage(
           initialRound: initialRound,
+          isRoundRegistered: isRegistered,
           onSubmit: onSubmit,
         ),
       ),

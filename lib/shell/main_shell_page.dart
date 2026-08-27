@@ -438,6 +438,10 @@ class _MainShellPageState extends State<MainShellPage> {
     return savedNumbers.where((savedNumber) => savedNumber.isPurchased).length;
   }
 
+  bool _isWinningRoundRegistered(int round) {
+    return _findWinningRound(round) != null;
+  }
+
   void _openAccountPage() {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -451,6 +455,7 @@ class _MainShellPageState extends State<MainShellPage> {
           onSignOutPressed: currentUserId == null ? null : _signOut,
           onWinningRoundSubmit: _saveWinningRound,
           initialWinningRound: roundInfo.latestDrawRound + 1,
+          isWinningRoundRegistered: _isWinningRoundRegistered,
         ),
       ),
     );
@@ -572,8 +577,15 @@ class _MainShellPageState extends State<MainShellPage> {
   }
 
   Future<void> _saveWinningRound(LottoWinningRound winningRound) async {
+    final userId = currentUserId;
+    final isExistingRound = _findWinningRound(winningRound.round) != null;
+
     try {
       await _winningRoundRepository.saveWinningRound(winningRound);
+
+      if (userId != null) {
+        await _refreshSavedNumberResultsForRound(userId, winningRound);
+      }
     } catch (_) {
       rethrow;
     }
@@ -584,10 +596,40 @@ class _MainShellPageState extends State<MainShellPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${winningRound.round}회 당첨번호를 등록했어요'),
+        content: Text(
+          isExistingRound
+              ? '${winningRound.round}회 당첨번호를 수정했어요'
+              : '${winningRound.round}회 당첨번호를 등록했어요',
+        ),
         duration: const Duration(seconds: 1),
       ),
     );
+  }
+
+  Future<void> _refreshSavedNumberResultsForRound(
+    String userId,
+    LottoWinningRound winningRound,
+  ) async {
+    final checkedAt = DateTime.now();
+    final targetSavedNumbers = savedNumbers.where(
+      (savedNumber) => savedNumber.round == winningRound.round,
+    );
+
+    for (final savedNumber in targetSavedNumbers) {
+      final result = _resultChecker.check(
+        savedNumber: savedNumber,
+        winningRound: winningRound,
+      );
+      final updatedSavedNumber = savedNumber.copyWith(
+        resultStatus: result.status,
+        matchCount: result.matchCount,
+        isBonusMatched: result.isBonusMatched,
+        checkedAt: checkedAt,
+        updatedAt: checkedAt,
+      );
+
+      await _savedNumberRepository.update(userId, updatedSavedNumber);
+    }
   }
 
   String _authErrorMessage(FirebaseAuthException error) {

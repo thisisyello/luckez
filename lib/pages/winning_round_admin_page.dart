@@ -8,10 +8,12 @@ class WinningRoundAdminPage extends StatefulWidget {
   const WinningRoundAdminPage({
     super.key,
     required this.initialRound,
+    required this.isRoundRegistered,
     required this.onSubmit,
   });
 
   final int initialRound;
+  final bool Function(int round) isRoundRegistered;
   final Future<void> Function(LottoWinningRound winningRound) onSubmit;
 
   @override
@@ -148,6 +150,17 @@ class _WinningRoundAdminPageState extends State<WinningRoundAdminPage> {
       return;
     }
 
+    final validRound = round!;
+    final isRegisteredRound = widget.isRoundRegistered(validRound);
+
+    if (isRegisteredRound) {
+      final shouldUpdate = await _confirmUpdate(validRound);
+
+      if (!shouldUpdate) {
+        return;
+      }
+    }
+
     setState(() {
       _isSaving = true;
     });
@@ -155,7 +168,7 @@ class _WinningRoundAdminPageState extends State<WinningRoundAdminPage> {
     try {
       await widget.onSubmit(
         LottoWinningRound(
-          round: round!,
+          round: validRound,
           numbers: List<int>.from(numbers)..sort(),
           bonusNumber: bonusNumber!,
           drawDate: drawDate,
@@ -178,6 +191,30 @@ class _WinningRoundAdminPageState extends State<WinningRoundAdminPage> {
     }
 
     Navigator.of(context).pop();
+  }
+
+  Future<bool> _confirmUpdate(int round) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('$round회는 이미 등록되어 있어요'),
+          content: const Text('입력한 내용으로 기존 당첨번호를 수정할까요?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('수정하기'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   List<int> _parseNumbers(String value) {
