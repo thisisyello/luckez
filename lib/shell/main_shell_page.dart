@@ -408,6 +408,7 @@ class _MainShellPageState extends State<MainShellPage> {
           CommunityPage(
             currentUserId: currentUserId,
             currentUserName: _currentUserName,
+            isAdmin: _isAdmin,
             onLoginRequired: () {
               _showComingSoonMessage('커뮤니티 글쓰기는 로그인이 필요해요');
               _openAccountPage();

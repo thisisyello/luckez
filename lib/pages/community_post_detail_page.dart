@@ -7,9 +7,15 @@ class CommunityPostDetailPage extends StatelessWidget {
   const CommunityPostDetailPage({
     super.key,
     required this.post,
+    required this.currentUserId,
+    required this.isAdmin,
+    required this.onDelete,
   });
 
   final CommunityPost post;
+  final String? currentUserId;
+  final bool isAdmin;
+  final Future<void> Function(String postId) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +33,14 @@ class CommunityPostDetailPage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: blackColor),
+        actions: [
+          if (_canDeletePost)
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _confirmDelete(context),
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: SafeArea(
         top: false,
@@ -132,6 +146,64 @@ class CommunityPostDetailPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  bool get _canDeletePost {
+    return isAdmin || currentUserId == post.authorId;
+  }
+
+  Future<void> _confirmDelete(BuildContext context) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('게시글을 삭제할까요?'),
+          content: const Text('삭제한 글은 목록에서 보이지 않아요.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('삭제'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true || !context.mounted) {
+      return;
+    }
+
+    try {
+      await onDelete(post.id);
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('게시글 삭제에 실패했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    if (!context.mounted) {
+      return;
+    }
+
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('게시글을 삭제했어요'),
+        duration: Duration(seconds: 1),
       ),
     );
   }

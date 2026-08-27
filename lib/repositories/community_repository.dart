@@ -27,6 +27,13 @@ class CommunityRepository {
     });
   }
 
+  Future<void> deletePost(String postId) {
+    return _postsCollection().doc(postId).update({
+      'deletedAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Stream<List<CommunityPost>> watchPosts() {
     return _postsCollection()
         .orderBy('createdAt', descending: true)

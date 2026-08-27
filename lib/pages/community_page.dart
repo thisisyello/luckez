@@ -11,6 +11,7 @@ class CommunityPage extends StatelessWidget {
     super.key,
     required this.currentUserId,
     required this.currentUserName,
+    required this.isAdmin,
     required this.onLoginRequired,
   });
 
@@ -18,6 +19,7 @@ class CommunityPage extends StatelessWidget {
 
   final String? currentUserId;
   final String? currentUserName;
+  final bool isAdmin;
   final VoidCallback onLoginRequired;
 
   @override
@@ -55,7 +57,12 @@ class CommunityPage extends StatelessWidget {
                   itemCount: posts.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
-                    return _CommunityPostCard(post: posts[index]);
+                    return _CommunityPostCard(
+                      post: posts[index],
+                      currentUserId: currentUserId,
+                      isAdmin: isAdmin,
+                      onDelete: _communityRepository.deletePost,
+                    );
                   },
                 );
               },
@@ -107,9 +114,17 @@ class CommunityPage extends StatelessWidget {
 }
 
 class _CommunityPostCard extends StatelessWidget {
-  const _CommunityPostCard({required this.post});
+  const _CommunityPostCard({
+    required this.post,
+    required this.currentUserId,
+    required this.isAdmin,
+    required this.onDelete,
+  });
 
   final CommunityPost post;
+  final String? currentUserId;
+  final bool isAdmin;
+  final Future<void> Function(String postId) onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -121,7 +136,12 @@ class _CommunityPostCard extends StatelessWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => CommunityPostDetailPage(post: post),
+              builder: (_) => CommunityPostDetailPage(
+                post: post,
+                currentUserId: currentUserId,
+                isAdmin: isAdmin,
+                onDelete: onDelete,
+              ),
             ),
           );
         },
