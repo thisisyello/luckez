@@ -48,6 +48,7 @@ class _MainShellPageState extends State<MainShellPage> {
   bool isWinningRoundsLoading = true;
   bool hasWinningRoundsError = false;
   String currentUserRole = 'user';
+  User? currentUser;
 
   @override
   void initState() {
@@ -98,6 +99,7 @@ class _MainShellPageState extends State<MainShellPage> {
       }
 
       setState(() {
+        currentUser = user;
         currentUserId = user?.uid;
 
         if (user == null) {
@@ -403,7 +405,14 @@ class _MainShellPageState extends State<MainShellPage> {
                   onUpdateSavedNumbers: updateSavedNumbers,
                   onDeleteSavedNumber: deleteSavedNumber,
                 ),
-          const CommunityPage(),
+          CommunityPage(
+            currentUserId: currentUserId,
+            currentUserName: _currentUserName,
+            onLoginRequired: () {
+              _showComingSoonMessage('커뮤니티 글쓰기는 로그인이 필요해요');
+              _openAccountPage();
+            },
+          ),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -467,6 +476,28 @@ class _MainShellPageState extends State<MainShellPage> {
 
   int get _purchasedNumbersCount {
     return savedNumbers.where((savedNumber) => savedNumber.isPurchased).length;
+  }
+
+  String? get _currentUserName {
+    final user = currentUser;
+
+    if (user == null) {
+      return null;
+    }
+
+    final displayName = user.displayName;
+
+    if (displayName != null && displayName.trim().isNotEmpty) {
+      return displayName.trim();
+    }
+
+    final email = user.email;
+
+    if (email != null && email.trim().isNotEmpty) {
+      return email.trim();
+    }
+
+    return '익명';
   }
 
   bool get _isAdmin {

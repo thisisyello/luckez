@@ -7,6 +7,26 @@ class CommunityRepository {
 
   final FirebaseFirestore _firestore;
 
+  Future<void> createPost({
+    required String title,
+    required String content,
+    required String authorId,
+    required String authorName,
+  }) {
+    final now = FieldValue.serverTimestamp();
+
+    return _postsCollection().add({
+      'title': title,
+      'content': content,
+      'authorId': authorId,
+      'authorName': authorName,
+      'commentCount': 0,
+      'createdAt': now,
+      'updatedAt': now,
+      'deletedAt': null,
+    });
+  }
+
   Stream<List<CommunityPost>> watchPosts() {
     return _postsCollection()
         .orderBy('createdAt', descending: true)

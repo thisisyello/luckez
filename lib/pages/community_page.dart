@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/community_post.dart';
+import 'package:luckez/pages/community_post_editor_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 
 class CommunityPage extends StatelessWidget {
-  const CommunityPage({super.key});
+  const CommunityPage({
+    super.key,
+    required this.currentUserId,
+    required this.currentUserName,
+    required this.onLoginRequired,
+  });
 
   static final _communityRepository = CommunityRepository();
+
+  final String? currentUserId;
+  final String? currentUserName;
+  final VoidCallback onLoginRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -53,14 +63,7 @@ class CommunityPage extends StatelessWidget {
               right: 20,
               bottom: 20,
               child: FloatingActionButton.extended(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('글쓰기 기능 준비 중'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                },
+                onPressed: () => _openEditor(context),
                 backgroundColor: mainColor,
                 foregroundColor: whiteColor,
                 elevation: 0,
@@ -72,6 +75,30 @@ class CommunityPage extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _openEditor(BuildContext context) {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      onLoginRequired();
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => CommunityPostEditorPage(
+          onSubmit: ({required title, required content}) {
+            return _communityRepository.createPost(
+              title: title,
+              content: content,
+              authorId: userId,
+              authorName: currentUserName ?? '익명',
+            );
+          },
         ),
       ),
     );
