@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_post.dart';
 import 'package:luckez/pages/community_post_detail_page.dart';
 import 'package:luckez/pages/community_post_editor_page.dart';
@@ -60,8 +61,33 @@ class CommunityPage extends StatelessWidget {
                     return _CommunityPostCard(
                       post: posts[index],
                       currentUserId: currentUserId,
+                      currentUserName: currentUserName,
                       isAdmin: isAdmin,
+                      onLoginRequired: onLoginRequired,
                       onDelete: _communityRepository.deletePost,
+                      commentsStream:
+                          _communityRepository.watchComments(posts[index].id),
+                      onCreateComment: ({required content}) {
+                        final userId = currentUserId;
+
+                        if (userId == null) {
+                          onLoginRequired();
+                          return Future.value();
+                        }
+
+                        return _communityRepository.createComment(
+                          postId: posts[index].id,
+                          content: content,
+                          authorId: userId,
+                          authorName: currentUserName ?? '익명',
+                        );
+                      },
+                      onDeleteComment: (commentId) {
+                        return _communityRepository.deleteComment(
+                          postId: posts[index].id,
+                          commentId: commentId,
+                        );
+                      },
                     );
                   },
                 );
@@ -117,14 +143,24 @@ class _CommunityPostCard extends StatelessWidget {
   const _CommunityPostCard({
     required this.post,
     required this.currentUserId,
+    required this.currentUserName,
     required this.isAdmin,
+    required this.onLoginRequired,
     required this.onDelete,
+    required this.commentsStream,
+    required this.onCreateComment,
+    required this.onDeleteComment,
   });
 
   final CommunityPost post;
   final String? currentUserId;
+  final String? currentUserName;
   final bool isAdmin;
+  final VoidCallback onLoginRequired;
   final Future<void> Function(String postId) onDelete;
+  final Stream<List<CommunityComment>> commentsStream;
+  final Future<void> Function({required String content}) onCreateComment;
+  final Future<void> Function(String commentId) onDeleteComment;
 
   @override
   Widget build(BuildContext context) {
@@ -139,8 +175,13 @@ class _CommunityPostCard extends StatelessWidget {
               builder: (_) => CommunityPostDetailPage(
                 post: post,
                 currentUserId: currentUserId,
+                currentUserName: currentUserName,
                 isAdmin: isAdmin,
+                onLoginRequired: onLoginRequired,
                 onDelete: onDelete,
+                commentsStream: commentsStream,
+                onCreateComment: onCreateComment,
+                onDeleteComment: onDeleteComment,
               ),
             ),
           );
