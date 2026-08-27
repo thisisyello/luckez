@@ -2,15 +2,41 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isDefaultUserRole() {
+      return request.resource.data.role == 'user';
+    }
+
+    function isRoleUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+    }
+
+    function isMissingRoleBackfill() {
+      return !resource.data.keys().hasAny(['role']) && isDefaultUserRole();
+    }
+
     match /lottoWinningRounds/{roundId} {
       allow read: if true;
       allow create, update: if request.auth != null;
       allow delete: if false;
     }
 
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isDefaultUserRole();
+      allow update: if isOwner(userId) && (isRoleUnchanged() || isMissingRoleBackfill());
+      allow delete: if false;
+    }
+
     match /users/{userId}/savedNumbers/{savedNumberId} {
-      allow read, create, update, delete: if request.auth != null
-        && request.auth.uid == userId;
+      allow read, create, update, delete: if isOwner(userId);
     }
 
     match /{document=**} {

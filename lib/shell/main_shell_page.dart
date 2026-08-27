@@ -7,6 +7,7 @@ import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
+import 'package:luckez/repositories/user_repository.dart';
 import 'package:luckez/repositories/winning_round_repository.dart';
 import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/services/lotto_result_checker.dart';
@@ -28,6 +29,7 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   static final _authService = AuthService();
   static final _savedNumberRepository = SavedLottoNumberRepository();
+  static final _userRepository = UserRepository();
   static final _winningRoundRepository = WinningRoundRepository();
   static const _resultChecker = LottoResultChecker();
 
@@ -107,6 +109,7 @@ class _MainShellPageState extends State<MainShellPage> {
         return;
       }
 
+      _ensureUserProfile(user);
       _listenSavedNumbers(user.uid);
     });
   }
@@ -117,6 +120,18 @@ class _MainShellPageState extends State<MainShellPage> {
     savedNumbersSubscription?.cancel();
     winningRoundsSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _ensureUserProfile(User user) async {
+    try {
+      await _userRepository.ensureUserProfile(user);
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      _showComingSoonMessage('회원 정보를 동기화하지 못했어요');
+    }
   }
 
   void _listenSavedNumbers(String userId) {
