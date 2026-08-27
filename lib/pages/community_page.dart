@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/community_post.dart';
+import 'package:luckez/pages/community_post_detail_page.dart';
 import 'package:luckez/pages/community_post_editor_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
@@ -118,10 +119,9 @@ class _CommunityPostCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(8),
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('게시글 상세 화면 준비 중'),
-              duration: Duration(seconds: 1),
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => CommunityPostDetailPage(post: post),
             ),
           );
         },
