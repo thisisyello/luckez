@@ -26,6 +26,8 @@ class _SignUpPageState extends State<SignUpPage> {
   final passwordController = TextEditingController();
   final passwordConfirmController = TextEditingController();
   String? errorText;
+  var isPasswordVisible = false;
+  var isPasswordConfirmVisible = false;
 
   @override
   void dispose() {
@@ -79,16 +81,42 @@ class _SignUpPageState extends State<SignUpPage> {
                   _AccountTextField(
                     controller: passwordController,
                     label: '비밀번호',
-                    obscureText: true,
+                    obscureText: !isPasswordVisible,
                     textInputAction: TextInputAction.done,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        color: greyColor,
+                        isPasswordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isPasswordVisible = !isPasswordVisible;
+                        });
+                      },
+                    ),
                     onSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 10),
                   _AccountTextField(
                     controller: passwordConfirmController,
                     label: '비밀번호 확인',
-                    obscureText: true,
+                    obscureText: !isPasswordConfirmVisible,
                     textInputAction: TextInputAction.done,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        color: greyColor,
+                        isPasswordConfirmVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isPasswordConfirmVisible = !isPasswordConfirmVisible;
+                        });
+                      },
+                    ),
                     onSubmitted: (_) => _submit(),
                   ),
                   if (errorText != null) ...[
@@ -165,6 +193,7 @@ class _AccountTextField extends StatelessWidget {
     this.onSubmitted,
     this.keyboardType,
     this.obscureText = false,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
@@ -173,6 +202,7 @@ class _AccountTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
   final bool obscureText;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +214,7 @@ class _AccountTextField extends StatelessWidget {
       obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
+        suffixIcon: suffixIcon,
         labelStyle: const TextStyle(
           color: greyColor,
           fontWeight: FontWeight.w600,

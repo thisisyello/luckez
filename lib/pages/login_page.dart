@@ -24,6 +24,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  var isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -83,8 +84,21 @@ class _LoginPageState extends State<LoginPage> {
                   _AccountTextField(
                     controller: passwordController,
                     label: '비밀번호',
-                    obscureText: true,
+                    obscureText: !isPasswordVisible,
                     textInputAction: TextInputAction.done,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        color: greyColor,
+                        isPasswordVisible
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          isPasswordVisible = !isPasswordVisible;
+                        });
+                      },
+                    ),
                     onSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 14),
@@ -132,6 +146,7 @@ class _AccountTextField extends StatelessWidget {
     this.onSubmitted,
     this.keyboardType,
     this.obscureText = false,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
@@ -140,6 +155,7 @@ class _AccountTextField extends StatelessWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
   final bool obscureText;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +167,7 @@ class _AccountTextField extends StatelessWidget {
       obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
+        suffixIcon: suffixIcon,
         labelStyle: const TextStyle(
           color: greyColor,
           fontWeight: FontWeight.w600,
