@@ -416,41 +416,65 @@ class _MainShellPageState extends State<MainShellPage> {
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            selectedIndex = index;
-          });
-        },
-        indicatorColor: mainColor.withValues(alpha: 0.12),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: '홈',
+      extendBody: true,
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+        child: Container(
+          height: 68,
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: borderColor),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x18000000),
+                blurRadius: 18,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: '통계',
+          clipBehavior: Clip.antiAlias,
+          child: NavigationBar(
+            selectedIndex: selectedIndex,
+            height: 68,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            indicatorColor: mainColor.withValues(alpha: 0.1),
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: (index) {
+              setState(() {
+                selectedIndex = index;
+              });
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.home_outlined),
+                selectedIcon: Icon(Icons.home),
+                label: '홈',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.bar_chart_outlined),
+                selectedIcon: Icon(Icons.bar_chart),
+                label: '통계',
+              ),
+              NavigationDestination(
+                icon: _PurchaseTabIcon(isSelected: false),
+                selectedIcon: _PurchaseTabIcon(isSelected: true),
+                label: '구매',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.confirmation_number_outlined),
+                selectedIcon: Icon(Icons.confirmation_number),
+                label: '내 번호',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.forum_outlined),
+                selectedIcon: Icon(Icons.forum),
+                label: '커뮤니티',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: _PurchaseTabIcon(isSelected: false),
-            selectedIcon: _PurchaseTabIcon(isSelected: true),
-            label: '구매',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.confirmation_number_outlined),
-            selectedIcon: Icon(Icons.confirmation_number),
-            label: '내 번호',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.forum_outlined),
-            selectedIcon: Icon(Icons.forum),
-            label: '커뮤니티',
-          ),
-        ],
+        ),
       ),
     );
   }

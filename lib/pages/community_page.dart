@@ -55,7 +55,7 @@ class CommunityPage extends StatelessWidget {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 160),
                   itemCount: posts.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
@@ -119,7 +119,7 @@ class CommunityPage extends StatelessWidget {
             ),
             Positioned(
               right: 20,
-              bottom: 20,
+              bottom: 96,
               child: FloatingActionButton.extended(
                 onPressed: () => _openEditor(context),
                 backgroundColor: mainColor,
@@ -353,7 +353,7 @@ class _CommunitySkeletonList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 96),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 160),
       itemCount: 8,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, __) => const _CommunitySkeletonCard(),
