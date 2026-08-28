@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:luckez/firebase_options.dart';
+import 'package:luckez/theme/app_theme.dart';
 import 'package:luckez/shell/main_shell_page.dart';
 
 Future<void> main() async {
@@ -19,9 +20,7 @@ class LuckezApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const MainShellPage(),
-      theme: ThemeData(
-        fontFamily: 'Pretendard',
-      ),
+      theme: AppTheme.light,
     );
   }
 }
