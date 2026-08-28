@@ -457,21 +457,32 @@ class _MainShellPageState extends State<MainShellPage> {
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: whiteColor,
+      backgroundColor: surfaceColor,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon: const Icon(Icons.person_outline),
-        color: blackColor,
+        icon: _ProfileIcon(photoUrl: currentUser?.photoURL),
+        color: textPrimaryColor,
+        tooltip: '계정',
         onPressed: _openAccountPage,
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_none),
-          color: blackColor,
+          icon: const Icon(
+            Icons.notifications_none,
+            size: 22,
+          ),
+          color: textPrimaryColor,
+          tooltip: '알림',
           onPressed: () => _showComingSoonMessage('알림 기능 준비 중'),
         ),
         const SizedBox(width: 8),
       ],
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(1),
+        child: Divider(height: 1),
+      ),
     );
   }
 
@@ -726,6 +737,30 @@ class _MainShellPageState extends State<MainShellPage> {
         content: Text(message),
         duration: const Duration(seconds: 1),
       ),
+    );
+  }
+}
+
+class _ProfileIcon extends StatelessWidget {
+  const _ProfileIcon({required this.photoUrl});
+
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = photoUrl?.trim();
+
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 13,
+        backgroundColor: const Color(0xffF3F3F5),
+        backgroundImage: NetworkImage(imageUrl),
+      );
+    }
+
+    return const Icon(
+      Icons.account_circle_outlined,
+      size: 25,
     );
   }
 }
