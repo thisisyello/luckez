@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_post.dart';
+import 'package:luckez/models/community_report.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 
@@ -16,6 +17,7 @@ class CommunityPostDetailPage extends StatefulWidget {
     required this.commentsStream,
     required this.onCreateComment,
     required this.onDeleteComment,
+    required this.onCreateReport,
   });
 
   final CommunityPost post;
@@ -27,6 +29,13 @@ class CommunityPostDetailPage extends StatefulWidget {
   final Stream<List<CommunityComment>> commentsStream;
   final Future<void> Function({required String content}) onCreateComment;
   final Future<void> Function(String commentId) onDeleteComment;
+  final Future<void> Function({
+    required String targetType,
+    required String targetId,
+    required String postId,
+    required String reason,
+    String? description,
+  }) onCreateReport;
 
   @override
   State<CommunityPostDetailPage> createState() =>
@@ -60,6 +69,14 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: blackColor),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.flag_outlined),
+            onPressed: () => _openReportDialog(
+              targetType: CommunityReportTargetType.post,
+              targetId: widget.post.id,
+              postId: widget.post.id,
+            ),
+          ),
           if (_canDeletePost)
             IconButton(
               icon: const Icon(Icons.delete_outline),
@@ -125,6 +142,11 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
                                 comment.createdAt,
                               ),
                               onDelete: () => _confirmDeleteComment(comment),
+                              onReport: () => _openReportDialog(
+                                targetType: CommunityReportTargetType.comment,
+                                targetId: comment.id,
+                                postId: widget.post.id,
+                              ),
                             ),
                           ),
                       ],
@@ -145,6 +167,124 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
 
   bool _canDeleteComment(CommunityComment comment) {
     return widget.isAdmin || widget.currentUserId == comment.authorId;
+  }
+
+  Future<void> _openReportDialog({
+    required String targetType,
+    required String targetId,
+    required String postId,
+  }) async {
+    if (widget.currentUserId == null) {
+      widget.onLoginRequired();
+      return;
+    }
+
+    final descriptionController = TextEditingController();
+    var selectedReason = CommunityReportReason.spam;
+
+    final shouldReport = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('신고할까요?'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<CommunityReportReason>(
+                    initialValue: selectedReason,
+                    decoration: const InputDecoration(
+                      labelText: '신고 사유',
+                    ),
+                    items: CommunityReportReason.values
+                        .map(
+                          (reason) => DropdownMenuItem(
+                            value: reason,
+                            child: Text(reason.label),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (reason) {
+                      if (reason == null) {
+                        return;
+                      }
+
+                      setDialogState(() {
+                        selectedReason = reason;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descriptionController,
+                    minLines: 2,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: '추가 설명',
+                      hintText: '선택 입력',
+                      alignLabelWithHint: true,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('취소'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('신고'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (shouldReport != true || !mounted) {
+      descriptionController.dispose();
+      return;
+    }
+
+    try {
+      await widget.onCreateReport(
+        targetType: targetType,
+        targetId: targetId,
+        postId: postId,
+        reason: selectedReason.value,
+        description: descriptionController.text,
+      );
+    } catch (_) {
+      descriptionController.dispose();
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('신고 등록에 실패했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    descriptionController.dispose();
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('신고가 접수됐어요'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   Future<void> _submitComment() async {
@@ -542,12 +682,14 @@ class _CommentTile extends StatelessWidget {
     required this.canDelete,
     required this.formattedDate,
     required this.onDelete,
+    required this.onReport,
   });
 
   final CommunityComment comment;
   final bool canDelete;
   final String formattedDate;
   final VoidCallback onDelete;
+  final VoidCallback onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -582,6 +724,21 @@ class _CommentTile extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
+              ),
+              const SizedBox(width: 2),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints(
+                  minWidth: 32,
+                  minHeight: 32,
+                ),
+                padding: EdgeInsets.zero,
+                icon: const Icon(
+                  Icons.flag_outlined,
+                  size: 16,
+                  color: greyColor,
+                ),
+                onPressed: onReport,
               ),
               if (canDelete) ...[
                 const SizedBox(width: 2),

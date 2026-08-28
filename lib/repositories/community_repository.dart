@@ -83,6 +83,29 @@ class CommunityRepository {
     return batch.commit();
   }
 
+  Future<void> createReport({
+    required String targetType,
+    required String targetId,
+    required String postId,
+    required String reporterId,
+    required String reason,
+    String? description,
+  }) {
+    final now = FieldValue.serverTimestamp();
+
+    return _reportsCollection().add({
+      'targetType': targetType,
+      'targetId': targetId,
+      'postId': postId,
+      'reporterId': reporterId,
+      'reason': reason,
+      'description': description?.trim() ?? '',
+      'status': 'pending',
+      'createdAt': now,
+      'resolvedAt': null,
+    });
+  }
+
   Stream<List<CommunityPost>> watchPosts() {
     return _postsCollection()
         .orderBy('createdAt', descending: true)
@@ -115,5 +138,9 @@ class CommunityRepository {
 
   CollectionReference<Map<String, dynamic>> _commentsCollection(String postId) {
     return _postsCollection().doc(postId).collection('comments');
+  }
+
+  CollectionReference<Map<String, dynamic>> _reportsCollection() {
+    return _firestore.collection('communityReports');
   }
 }

@@ -88,6 +88,29 @@ class CommunityPage extends StatelessWidget {
                           commentId: commentId,
                         );
                       },
+                      onCreateReport: ({
+                        required targetType,
+                        required targetId,
+                        required postId,
+                        required reason,
+                        description,
+                      }) {
+                        final userId = currentUserId;
+
+                        if (userId == null) {
+                          onLoginRequired();
+                          return Future.value();
+                        }
+
+                        return _communityRepository.createReport(
+                          targetType: targetType,
+                          targetId: targetId,
+                          postId: postId,
+                          reporterId: userId,
+                          reason: reason,
+                          description: description,
+                        );
+                      },
                     );
                   },
                 );
@@ -150,6 +173,7 @@ class _CommunityPostCard extends StatelessWidget {
     required this.commentsStream,
     required this.onCreateComment,
     required this.onDeleteComment,
+    required this.onCreateReport,
   });
 
   final CommunityPost post;
@@ -161,6 +185,13 @@ class _CommunityPostCard extends StatelessWidget {
   final Stream<List<CommunityComment>> commentsStream;
   final Future<void> Function({required String content}) onCreateComment;
   final Future<void> Function(String commentId) onDeleteComment;
+  final Future<void> Function({
+    required String targetType,
+    required String targetId,
+    required String postId,
+    required String reason,
+    String? description,
+  }) onCreateReport;
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +213,7 @@ class _CommunityPostCard extends StatelessWidget {
                 commentsStream: commentsStream,
                 onCreateComment: onCreateComment,
                 onDeleteComment: onDeleteComment,
+                onCreateReport: onCreateReport,
               ),
             ),
           );
