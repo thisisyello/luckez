@@ -4,6 +4,7 @@ import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/services/lotto_round_date_service.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_card.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 typedef SavedNumbersUpdated = void Function(String id, List<int> numbers);
@@ -375,25 +376,9 @@ class _SavedNumbersList extends StatelessWidget {
       itemBuilder: (context, index) {
         final savedNumber = reversedNumbers[index];
 
-        return Container(
+        return AppCard(
           margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: whiteColor,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color:
-                  savedNumber.isPurchased ? mainColor : const Color(0xffEEEEEE),
-              width: savedNumber.isPurchased ? 1.4 : 1,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 14,
-                offset: Offset(0, 6),
-              ),
-            ],
-          ),
+          isSelected: savedNumber.isPurchased,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

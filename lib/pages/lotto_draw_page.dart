@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_button.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 class LottoDrawPage extends StatefulWidget {
@@ -84,33 +85,16 @@ class _LottoDrawPageState extends State<LottoDrawPage> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton(
+                      child: AppButton.secondary(
+                        label: '다시 뽑기',
                         onPressed: generateLottoNumbers,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: mainColor,
-                          side: const BorderSide(color: mainColor),
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('다시 추첨'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: ElevatedButton(
+                      child: AppButton.primary(
+                        label: '저장하기',
                         onPressed: saveCurrentLottoNumbers,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainColor,
-                          foregroundColor: whiteColor,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('저장하기'),
                       ),
                     ),
                   ],
