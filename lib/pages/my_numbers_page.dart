@@ -4,6 +4,7 @@ import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/services/lotto_round_date_service.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_button.dart';
 import 'package:luckez/widgets/app_card.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
@@ -290,18 +291,9 @@ class _RoundPickerSheetState extends State<_RoundPickerSheet> {
                       ),
                     ],
                     const SizedBox(height: 14),
-                    ElevatedButton(
+                    AppButton.primary(
+                      label: '이동',
                       onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: mainColor,
-                        foregroundColor: whiteColor,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text('이동'),
                     ),
                     const SizedBox(height: 4),
                     TextButton(

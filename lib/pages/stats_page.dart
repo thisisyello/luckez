@@ -3,6 +3,7 @@ import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/lotto_number_frequency.dart';
 import 'package:luckez/services/lotto_statistics_service.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/widgets/app_card.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/winning_history_view.dart';
 
@@ -259,39 +260,29 @@ class _StatsSkeletonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: const Row(
-        children: [
-          _SkeletonBlock(width: 28, height: 14),
-          SizedBox(width: 14),
-          _SkeletonCircle(size: 38),
-          SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _SkeletonBlock(height: 14),
-                SizedBox(height: 10),
-                _SkeletonBlock(height: 7),
-              ],
+    return const AppCard(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: SizedBox(
+        height: 44,
+        child: Row(
+          children: [
+            _SkeletonBlock(width: 28, height: 14),
+            SizedBox(width: 14),
+            _SkeletonCircle(size: 38),
+            SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _SkeletonBlock(height: 14),
+                  SizedBox(height: 10),
+                  _SkeletonBlock(height: 7),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -426,20 +417,8 @@ class _NumberFrequencyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = maxCount == 0 ? 0.0 : frequency.count / maxCount;
 
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 12,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
       child: Row(
         children: [
           SizedBox(

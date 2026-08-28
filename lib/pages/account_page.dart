@@ -5,6 +5,8 @@ import 'package:luckez/pages/sign_up_page.dart';
 import 'package:luckez/pages/winning_round_admin_page.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_button.dart';
+import 'package:luckez/widgets/app_card.dart';
 
 typedef EmailPasswordSubmitted = void Function(String email, String password);
 typedef WinningRoundSubmitted = Future<void> Function(
@@ -241,20 +243,8 @@ class _AccountStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 12,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -406,25 +396,11 @@ class _PrimaryAccountButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppButton.primary(
+      label: label,
+      icon: icon,
+      onPressed: onPressed,
       height: 54,
-      child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(label),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: mainColor,
-          foregroundColor: whiteColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
     );
   }
 }
@@ -442,25 +418,11 @@ class _SecondaryAccountButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppButton.neutral(
+      label: label,
+      icon: icon,
+      onPressed: onPressed,
       height: 54,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: blackColor,
-          backgroundColor: whiteColor,
-          side: const BorderSide(color: Color(0xffE6E6E8)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
     );
   }
 }

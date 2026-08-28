@@ -4,6 +4,7 @@ import 'package:luckez/theme/app_colors.dart';
 enum AppButtonVariant {
   primary,
   secondary,
+  neutral,
   danger,
 }
 
@@ -47,6 +48,23 @@ class AppButton extends StatelessWidget {
           label: label,
           onPressed: onPressed,
           variant: AppButtonVariant.secondary,
+          icon: icon,
+          isLoading: isLoading,
+          height: height,
+        );
+
+  const AppButton.neutral({
+    Key? key,
+    required String label,
+    required VoidCallback? onPressed,
+    IconData? icon,
+    bool isLoading = false,
+    double height = 52,
+  }) : this._(
+          key: key,
+          label: label,
+          onPressed: onPressed,
+          variant: AppButtonVariant.neutral,
           icon: icon,
           isLoading: isLoading,
           height: height,
@@ -96,6 +114,19 @@ class AppButton extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: mainColor,
               side: const BorderSide(color: mainColor),
+            ),
+            child: _ButtonContent(
+              label: label,
+              icon: icon,
+              isLoading: isLoading,
+            ),
+          ),
+        AppButtonVariant.neutral => OutlinedButton(
+            onPressed: effectiveOnPressed,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: textPrimaryColor,
+              backgroundColor: surfaceColor,
+              side: const BorderSide(color: borderColor),
             ),
             child: _ButtonContent(
               label: label,

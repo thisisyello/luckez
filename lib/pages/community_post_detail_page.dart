@@ -4,6 +4,8 @@ import 'package:luckez/models/community_post.dart';
 import 'package:luckez/models/community_report.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_button.dart';
+import 'package:luckez/widgets/app_card.dart';
 
 class CommunityPostDetailPage extends StatefulWidget {
   const CommunityPostDetailPage({
@@ -464,13 +466,9 @@ class _PostContentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-      ),
+      showShadow: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -537,13 +535,9 @@ class _CommentSectionShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-      ),
+      showShadow: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -593,20 +587,10 @@ class _CommentInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!isLoggedIn) {
-      return OutlinedButton(
+      return AppButton.secondary(
+        label: '로그인하고 댓글 쓰기',
         onPressed: onLoginRequired,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: mainColor,
-          side: const BorderSide(color: Color(0xffF0B5C0)),
-          minimumSize: const Size.fromHeight(46),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: const Text(
-          '로그인하고 댓글 쓰기',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
+        height: 46,
       );
     }
 
@@ -644,31 +628,11 @@ class _CommentInput extends StatelessWidget {
         const SizedBox(width: 8),
         SizedBox(
           height: 46,
-          child: ElevatedButton(
+          child: AppButton.primary(
+            label: '등록',
             onPressed: canSubmit ? onSubmit : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: mainColor,
-              foregroundColor: whiteColor,
-              disabledBackgroundColor: const Color(0xffE5E5E5),
-              disabledForegroundColor: greyColor,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: isSubmitting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: whiteColor,
-                    ),
-                  )
-                : const Text(
-                    '등록',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
+            isLoading: isSubmitting,
+            height: 46,
           ),
         ),
       ],
@@ -814,13 +778,9 @@ class _CommentSectionSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-      ),
+      showShadow: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [

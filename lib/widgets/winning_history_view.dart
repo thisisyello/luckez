@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_card.dart';
 import 'package:luckez/widgets/lotto_ball.dart';
 
 class WinningHistoryView extends StatelessWidget {
@@ -36,20 +37,7 @@ class _WinningRoundCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 12,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

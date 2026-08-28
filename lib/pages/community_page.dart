@@ -6,6 +6,7 @@ import 'package:luckez/pages/community_post_editor_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_card.dart';
 
 class CommunityPage extends StatelessWidget {
   const CommunityPage({
@@ -218,12 +219,8 @@ class _CommunityPostCard extends StatelessWidget {
             ),
           );
         },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xffEEEEEE)),
-          ),
+        child: AppCard(
+          showShadow: false,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -369,25 +366,22 @@ class _CommunitySkeletonCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 112,
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SkeletonBar(width: 180, height: 16),
-          SizedBox(height: 12),
-          _SkeletonBar(width: double.infinity, height: 12),
-          SizedBox(height: 8),
-          _SkeletonBar(width: 220, height: 12),
-          Spacer(),
-          _SkeletonBar(width: 140, height: 11),
-        ],
+    return const AppCard(
+      showShadow: false,
+      child: SizedBox(
+        height: 80,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _SkeletonBar(width: 180, height: 16),
+            SizedBox(height: 12),
+            _SkeletonBar(width: double.infinity, height: 12),
+            SizedBox(height: 8),
+            _SkeletonBar(width: 220, height: 12),
+            Spacer(),
+            _SkeletonBar(width: 140, height: 11),
+          ],
+        ),
       ),
     );
   }

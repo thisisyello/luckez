@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:luckez/pages/account_page.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_button.dart';
+import 'package:luckez/widgets/app_card.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({
@@ -140,20 +142,7 @@ class _AuthFormCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 12,
-            offset: Offset(0, 5),
-          ),
-        ],
-      ),
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: children,
@@ -213,24 +202,10 @@ class _PrimaryAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppButton.primary(
+      label: label,
+      onPressed: onPressed,
       height: 54,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: mainColor,
-          foregroundColor: whiteColor,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        child: Text(label),
-      ),
     );
   }
 }
@@ -248,25 +223,11 @@ class _SocialAuthButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppButton.neutral(
+      label: label,
+      icon: icon,
+      onPressed: onPressed,
       height: 56,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon, size: 24),
-        label: Text(label),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: blackColor,
-          backgroundColor: whiteColor,
-          side: const BorderSide(color: Color(0xffE6E6E8)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          textStyle: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
     );
   }
 }

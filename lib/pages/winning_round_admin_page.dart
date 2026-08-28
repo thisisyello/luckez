@@ -3,6 +3,8 @@ import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/services/lotto_round_date_service.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
+import 'package:luckez/widgets/app_button.dart';
+import 'package:luckez/widgets/app_card.dart';
 
 class WinningRoundAdminPage extends StatefulWidget {
   const WinningRoundAdminPage({
@@ -104,26 +106,10 @@ class _WinningRoundAdminPageState extends State<WinningRoundAdminPage> {
                 keyboardType: TextInputType.datetime,
               ),
               const SizedBox(height: 18),
-              SizedBox(
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: _isSaving ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: mainColor,
-                    foregroundColor: whiteColor,
-                    disabledBackgroundColor: const Color(0xffE6E6E8),
-                    disabledForegroundColor: greyColor,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    textStyle: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  child: Text(_isSaving ? '등록 중' : '등록하기'),
-                ),
+              AppButton.primary(
+                label: '등록하기',
+                onPressed: _isSaving ? null : _submit,
+                isLoading: _isSaving,
               ),
             ],
           ),
@@ -300,14 +286,10 @@ class _NoticeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: whiteColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xffEEEEEE)),
-      ),
-      child: const Text(
+    return const AppCard(
+      padding: EdgeInsets.all(14),
+      showShadow: false,
+      child: Text(
         '임시 등록 화면입니다. 회원 등급 구조가 생기면 관리자만 접근하도록 바꿀 예정입니다.',
         style: TextStyle(
           color: greyColor,
