@@ -458,8 +458,8 @@ class _MainShellPageState extends State<MainShellPage> {
                 label: '통계',
               ),
               NavigationDestination(
-                icon: _PurchaseTabIcon(isSelected: false),
-                selectedIcon: _PurchaseTabIcon(isSelected: true),
+                icon: Icon(Icons.shopping_bag_outlined),
+                selectedIcon: Icon(Icons.shopping_bag),
                 label: '구매',
               ),
               NavigationDestination(
@@ -785,29 +785,6 @@ class _ProfileIcon extends StatelessWidget {
     return const Icon(
       Icons.account_circle_outlined,
       size: 25,
-    );
-  }
-}
-
-class _PurchaseTabIcon extends StatelessWidget {
-  const _PurchaseTabIcon({required this.isSelected});
-
-  final bool isSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isSelected ? mainColor : mainColor.withValues(alpha: 0.12),
-      ),
-      child: Icon(
-        Icons.shopping_bag_outlined,
-        size: 20,
-        color: isSelected ? whiteColor : mainColor,
-      ),
     );
   }
 }
