@@ -72,18 +72,24 @@ class _SignUpPageState extends State<SignUpPage> {
                     controller: emailController,
                     label: '이메일',
                     keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 10),
                   _AccountTextField(
                     controller: passwordController,
                     label: '비밀번호',
                     obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
                   ),
                   const SizedBox(height: 10),
                   _AccountTextField(
                     controller: passwordConfirmController,
                     label: '비밀번호 확인',
                     obscureText: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
                   ),
                   if (errorText != null) ...[
                     const SizedBox(height: 10),
@@ -155,6 +161,8 @@ class _AccountTextField extends StatelessWidget {
   const _AccountTextField({
     required this.controller,
     required this.label,
+    this.textInputAction,
+    this.onSubmitted,
     this.keyboardType,
     this.obscureText = false,
   });
@@ -162,6 +170,8 @@ class _AccountTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onSubmitted;
   final bool obscureText;
 
   @override
@@ -169,6 +179,8 @@ class _AccountTextField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onSubmitted: onSubmitted,
       obscureText: obscureText,
       decoration: InputDecoration(
         labelText: label,
