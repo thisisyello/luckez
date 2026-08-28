@@ -114,16 +114,18 @@ class AccountPageContent extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             if (!isLoggedIn) ...[
-              _PrimaryAccountButton(
+              AppButton.primary(
                 icon: Icons.login,
                 label: '로그인',
                 onPressed: () => _openLoginPage(context),
+                height: 54,
               ),
               const SizedBox(height: 10),
-              _SecondaryAccountButton(
+              AppButton.neutral(
                 icon: Icons.person_add_alt_1_outlined,
                 label: '회원가입',
                 onPressed: () => _openSignUpPage(context),
+                height: 54,
               ),
             ] else ...[
               if (onWinningRoundSubmit != null &&
@@ -133,10 +135,11 @@ class AccountPageContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
               ],
-              _SecondaryAccountButton(
+              AppButton.neutral(
                 icon: Icons.logout,
                 label: '로그아웃',
                 onPressed: onSignOutPressed,
+                height: 54,
               ),
             ],
           ],
@@ -379,50 +382,6 @@ class _TemporaryAdminButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PrimaryAccountButton extends StatelessWidget {
-  const _PrimaryAccountButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppButton.primary(
-      label: label,
-      icon: icon,
-      onPressed: onPressed,
-      height: 54,
-    );
-  }
-}
-
-class _SecondaryAccountButton extends StatelessWidget {
-  const _SecondaryAccountButton({
-    required this.icon,
-    required this.label,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppButton.neutral(
-      label: label,
-      icon: icon,
-      onPressed: onPressed,
-      height: 54,
     );
   }
 }
