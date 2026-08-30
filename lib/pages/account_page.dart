@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
+import 'package:luckez/pages/liked_posts_page.dart';
+import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
 import 'package:luckez/pages/winning_round_admin_page.dart';
@@ -20,6 +22,9 @@ class AccountPage extends StatelessWidget {
     required this.isLoggedIn,
     required this.savedNumbersCount,
     required this.purchasedNumbersCount,
+    required this.currentUserId,
+    required this.currentUserName,
+    required this.isAdmin,
     required this.onGooglePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
@@ -32,6 +37,9 @@ class AccountPage extends StatelessWidget {
   final bool isLoggedIn;
   final int savedNumbersCount;
   final int purchasedNumbersCount;
+  final String? currentUserId;
+  final String? currentUserName;
+  final bool isAdmin;
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
@@ -61,6 +69,9 @@ class AccountPage extends StatelessWidget {
         isLoggedIn: isLoggedIn,
         savedNumbersCount: savedNumbersCount,
         purchasedNumbersCount: purchasedNumbersCount,
+        currentUserId: currentUserId,
+        currentUserName: currentUserName,
+        isAdmin: isAdmin,
         onGooglePressed: onGooglePressed,
         onEmailLoginPressed: onEmailLoginPressed,
         onEmailSignUpPressed: onEmailSignUpPressed,
@@ -74,11 +85,16 @@ class AccountPage extends StatelessWidget {
 }
 
 class AccountPageContent extends StatelessWidget {
+  static final _communityRepository = CommunityRepository();
+
   const AccountPageContent({
     super.key,
     required this.isLoggedIn,
     required this.savedNumbersCount,
     required this.purchasedNumbersCount,
+    required this.currentUserId,
+    required this.currentUserName,
+    required this.isAdmin,
     required this.onGooglePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
@@ -91,6 +107,9 @@ class AccountPageContent extends StatelessWidget {
   final bool isLoggedIn;
   final int savedNumbersCount;
   final int purchasedNumbersCount;
+  final String? currentUserId;
+  final String? currentUserName;
+  final bool isAdmin;
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
@@ -136,6 +155,13 @@ class AccountPageContent extends StatelessWidget {
                 const SizedBox(height: 10),
               ],
               AppButton.neutral(
+                icon: Icons.favorite_border,
+                label: '좋아요한 글',
+                onPressed: () => _openLikedPostsPage(context),
+                height: 54,
+              ),
+              const SizedBox(height: 10),
+              AppButton.neutral(
                 icon: Icons.logout,
                 label: '로그아웃',
                 onPressed: onSignOutPressed,
@@ -143,6 +169,26 @@ class AccountPageContent extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  void _openLikedPostsPage(BuildContext context) {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LikedPostsPage(
+          userId: userId,
+          currentUserName: currentUserName,
+          isAdmin: isAdmin,
+          communityRepository: _communityRepository,
+          onLoginRequired: () {},
         ),
       ),
     );

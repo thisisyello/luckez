@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:luckez/models/community_comment.dart';
+import 'package:luckez/models/community_liked_post.dart';
 import 'package:luckez/models/community_post.dart';
 
 class CommunityRepository {
@@ -90,12 +91,19 @@ class CommunityRepository {
   }) async {
     final postRef = _postsCollection().doc(postId);
     final likeRef = _likesCollection(postId).doc(userId);
+    final likedPostRef = _likedPostsCollection(userId).doc(postId);
 
     await _firestore.runTransaction((transaction) async {
       final likeSnapshot = await transaction.get(likeRef);
+      final postSnapshot = await transaction.get(postRef);
+
+      if (!postSnapshot.exists) {
+        throw StateError('Post does not exist.');
+      }
 
       if (likeSnapshot.exists) {
         transaction.delete(likeRef);
+        transaction.delete(likedPostRef);
         transaction.update(postRef, {
           'likeCount': FieldValue.increment(-1),
           'updatedAt': FieldValue.serverTimestamp(),
@@ -103,13 +111,23 @@ class CommunityRepository {
         return;
       }
 
+      final post = CommunityPost.fromMap(postSnapshot.id, postSnapshot.data()!);
+      final now = FieldValue.serverTimestamp();
+
       transaction.set(likeRef, {
         'userId': userId,
-        'createdAt': FieldValue.serverTimestamp(),
+        'createdAt': now,
+      });
+      transaction.set(likedPostRef, {
+        'postId': post.id,
+        'title': post.title,
+        'authorName': post.authorName,
+        'likedAt': now,
+        'postCreatedAt': postSnapshot.data()?['createdAt'],
       });
       transaction.update(postRef, {
         'likeCount': FieldValue.increment(1),
-        'updatedAt': FieldValue.serverTimestamp(),
+        'updatedAt': now,
       });
     });
   }
@@ -146,6 +164,40 @@ class CommunityRepository {
           (snapshot) => snapshot.docs
               .map((doc) => CommunityPost.fromMap(doc.id, doc.data()))
               .where((post) => !post.isDeleted)
+              .toList(),
+        );
+  }
+
+  Future<CommunityPost?> fetchPost(String postId) async {
+    final snapshot = await _postsCollection().doc(postId).get();
+
+    if (!snapshot.exists) {
+      return null;
+    }
+
+    final data = snapshot.data();
+
+    if (data == null) {
+      return null;
+    }
+
+    final post = CommunityPost.fromMap(snapshot.id, data);
+
+    if (post.isDeleted) {
+      return null;
+    }
+
+    return post;
+  }
+
+  Stream<List<CommunityLikedPost>> watchMyLikedPosts(String userId) {
+    return _likedPostsCollection(userId)
+        .orderBy('likedAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CommunityLikedPost.fromMap(doc.id, doc.data()))
               .toList(),
         );
   }
@@ -190,5 +242,11 @@ class CommunityRepository {
 
   CollectionReference<Map<String, dynamic>> _reportsCollection() {
     return _firestore.collection('communityReports');
+  }
+
+  CollectionReference<Map<String, dynamic>> _likedPostsCollection(
+    String userId,
+  ) {
+    return _firestore.collection('users').doc(userId).collection('likedPosts');
   }
 }

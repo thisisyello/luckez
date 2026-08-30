@@ -2,6 +2,7 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    // 로그인/소유자/관리자 판단에 쓰는 공통 함수
     function isSignedIn() {
       return request.auth != null;
     }
@@ -15,6 +16,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // 일반 사용자가 role을 admin으로 바꾸지 못하게 제한
     function isDefaultUserRole() {
       return request.resource.data.role == 'user';
     }
@@ -27,6 +29,7 @@ service cloud.firestore {
       return !resource.data.keys().hasAny(['role']) && isDefaultUserRole();
     }
 
+    // 커뮤니티 글/댓글 작성자와 soft delete 검증
     function isPostAuthor() {
       return isSignedIn() && resource.data.authorId == request.auth.uid;
     }
@@ -36,33 +39,131 @@ service cloud.firestore {
         && request.resource.data.deletedAt != null;
     }
 
+    function isCommentAuthor() {
+      return isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    function isSoftDeletingComment() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedAt', 'updatedAt'])
+        && request.resource.data.deletedAt != null;
+    }
+
+    // 댓글 수는 댓글 작성/삭제 시 1씩만 변경 허용
+    function isUpdatingPostCommentCount() {
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['commentCount', 'updatedAt'])
+        && request.resource.data.commentCount is int
+        && request.resource.data.commentCount >= 0
+        && (
+          request.resource.data.commentCount == resource.data.commentCount + 1
+          || request.resource.data.commentCount == resource.data.commentCount - 1
+        );
+    }
+
+    // 좋아요 수는 좋아요/취소 시 1씩만 변경 허용
+    function isUpdatingPostLikeCount() {
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likeCount', 'updatedAt'])
+        && request.resource.data.likeCount is int
+        && request.resource.data.likeCount >= 0
+        && (
+          request.resource.data.likeCount == resource.data.likeCount + 1
+          || request.resource.data.likeCount == resource.data.likeCount - 1
+          || (!resource.data.keys().hasAny(['likeCount']) && request.resource.data.likeCount == 1)
+        );
+    }
+
+    // 신고 문서는 정해진 필드와 값만 생성 허용
+    function isValidCommunityReport() {
+      return isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'targetType',
+          'targetId',
+          'postId',
+          'reporterId',
+          'reason',
+          'description',
+          'status',
+          'createdAt',
+          'resolvedAt'
+        ])
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.targetType in ['post', 'comment']
+        && request.resource.data.reason in ['spam', 'abuse', 'inappropriate', 'etc']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.resolvedAt == null;
+    }
+
+    // 당첨번호는 누구나 읽고, 등록/수정은 관리자만 허용
     match /lottoWinningRounds/{roundId} {
       allow read: if true;
       allow create, update: if isAdmin();
       allow delete: if false;
     }
 
+    // 커뮤니티 게시글: 읽기는 공개, 작성은 로그인 사용자만 허용
     match /communityPosts/{postId} {
       allow read: if true;
       allow create: if isSignedIn()
         && request.resource.data.authorId == request.auth.uid
         && request.resource.data.commentCount == 0
+        && request.resource.data.likeCount == 0
         && request.resource.data.deletedAt == null;
-      allow update: if (isPostAuthor() || isAdmin()) && isSoftDeletingPost();
+      allow update: if ((isPostAuthor() || isAdmin()) && isSoftDeletingPost())
+        || isUpdatingPostCommentCount()
+        || isUpdatingPostLikeCount();
+      allow delete: if false;
+
+      // 댓글: 읽기는 공개, 작성은 로그인 사용자만 허용
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn()
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.deletedAt == null;
+        allow update: if (isCommentAuthor() || isAdmin()) && isSoftDeletingComment();
+        allow delete: if false;
+      }
+
+      // 좋아요 원본: 사용자당 게시글 1개 문서만 생성
+      match /likes/{userId} {
+        allow read: if true;
+        allow create: if isOwner(userId)
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if isOwner(userId);
+        allow update: if false;
+      }
+    }
+
+    // 신고: 사용자는 생성만, 관리는 관리자만 허용
+    match /communityReports/{reportId} {
+      allow create: if isValidCommunityReport();
+      allow read, update: if isAdmin();
       allow delete: if false;
     }
 
+    // 사용자 프로필과 개인 데이터는 본인만 접근
     match /users/{userId} {
       allow read: if isOwner(userId);
       allow create: if isOwner(userId) && isDefaultUserRole();
       allow update: if isOwner(userId) && (isRoleUnchanged() || isMissingRoleBackfill());
       allow delete: if false;
+
+      // 저장한 로또 번호
+      match /savedNumbers/{savedNumberId} {
+        allow read, create, update, delete: if isOwner(userId);
+      }
+
+      // 내가 좋아요한 글 목록 캐시
+      match /likedPosts/{likedPostId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.postId == likedPostId;
+        allow delete: if isOwner(userId);
+        allow update: if false;
+      }
     }
 
-    match /users/{userId}/savedNumbers/{savedNumberId} {
-      allow read, create, update, delete: if isOwner(userId);
-    }
-
+    // 위에서 허용하지 않은 모든 접근은 차단
     match /{document=**} {
       allow read, write: if false;
     }
