@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_post.dart';
 import 'package:luckez/models/community_report.dart';
+import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/app_button.dart';
@@ -15,13 +16,7 @@ class CommunityPostDetailPage extends StatefulWidget {
     required this.currentUserName,
     required this.isAdmin,
     required this.onLoginRequired,
-    required this.onDelete,
-    required this.commentsStream,
-    required this.onCreateComment,
-    required this.onDeleteComment,
-    required this.onCreateReport,
-    required this.isLikedStream,
-    required this.onToggleLike,
+    required this.communityRepository,
   });
 
   final CommunityPost post;
@@ -29,19 +24,7 @@ class CommunityPostDetailPage extends StatefulWidget {
   final String? currentUserName;
   final bool isAdmin;
   final VoidCallback onLoginRequired;
-  final Future<void> Function(String postId) onDelete;
-  final Stream<List<CommunityComment>> commentsStream;
-  final Future<void> Function({required String content}) onCreateComment;
-  final Future<void> Function(String commentId) onDeleteComment;
-  final Future<void> Function({
-    required String targetType,
-    required String targetId,
-    required String postId,
-    required String reason,
-    String? description,
-  }) onCreateReport;
-  final Stream<bool> isLikedStream;
-  final Future<void> Function() onToggleLike;
+  final CommunityRepository communityRepository;
 
   @override
   State<CommunityPostDetailPage> createState() =>
@@ -107,13 +90,16 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
               _PostContentCard(
                 post: widget.post,
                 formattedDate: _formatFullDate(widget.post.createdAt),
-                isLikedStream: widget.isLikedStream,
+                isLikedStream: widget.communityRepository.watchPostLike(
+                  postId: widget.post.id,
+                  userId: widget.currentUserId,
+                ),
                 likeCount: _likeCount,
                 onToggleLike: _toggleLike,
               ),
               const SizedBox(height: 14),
               StreamBuilder<List<CommunityComment>>(
-                stream: widget.commentsStream,
+                stream: widget.communityRepository.watchComments(widget.post.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const _CommentSectionSkeleton();
@@ -185,7 +171,17 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     });
 
     try {
-      await widget.onToggleLike();
+      final userId = widget.currentUserId;
+
+      if (userId == null) {
+        widget.onLoginRequired();
+        return;
+      }
+
+      await widget.communityRepository.togglePostLike(
+        postId: widget.post.id,
+        userId: userId,
+      );
     } catch (_) {
       if (!mounted) {
         return;
@@ -292,10 +288,11 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     }
 
     try {
-      await widget.onCreateReport(
+      await widget.communityRepository.createReport(
         targetType: targetType,
         targetId: targetId,
         postId: postId,
+        reporterId: widget.currentUserId!,
         reason: selectedReason.value,
         description: descriptionController.text,
       );
@@ -346,7 +343,12 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     });
 
     try {
-      await widget.onCreateComment(content: content);
+      await widget.communityRepository.createComment(
+        postId: widget.post.id,
+        content: content,
+        authorId: widget.currentUserId!,
+        authorName: widget.currentUserName ?? '익명',
+      );
       _commentController.clear();
     } catch (_) {
       if (!mounted) {
@@ -394,7 +396,10 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     }
 
     try {
-      await widget.onDeleteComment(comment.id);
+      await widget.communityRepository.deleteComment(
+        postId: widget.post.id,
+        commentId: comment.id,
+      );
     } catch (_) {
       if (!mounted) {
         return;
@@ -435,7 +440,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     }
 
     try {
-      await widget.onDelete(widget.post.id);
+      await widget.communityRepository.deletePost(widget.post.id);
     } catch (_) {
       if (!context.mounted) {
         return;

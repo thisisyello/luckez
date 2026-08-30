@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_post.dart';
 import 'package:luckez/pages/community_post_detail_page.dart';
 import 'package:luckez/pages/community_post_editor_page.dart';
@@ -61,74 +60,11 @@ class CommunityPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     return _CommunityPostCard(
                       post: posts[index],
+                      communityRepository: _communityRepository,
                       currentUserId: currentUserId,
                       currentUserName: currentUserName,
                       isAdmin: isAdmin,
                       onLoginRequired: onLoginRequired,
-                      onDelete: _communityRepository.deletePost,
-                      commentsStream:
-                          _communityRepository.watchComments(posts[index].id),
-                      onCreateComment: ({required content}) {
-                        final userId = currentUserId;
-
-                        if (userId == null) {
-                          onLoginRequired();
-                          return Future.value();
-                        }
-
-                        return _communityRepository.createComment(
-                          postId: posts[index].id,
-                          content: content,
-                          authorId: userId,
-                          authorName: currentUserName ?? '익명',
-                        );
-                      },
-                      onDeleteComment: (commentId) {
-                        return _communityRepository.deleteComment(
-                          postId: posts[index].id,
-                          commentId: commentId,
-                        );
-                      },
-                      onCreateReport: ({
-                        required targetType,
-                        required targetId,
-                        required postId,
-                        required reason,
-                        description,
-                      }) {
-                        final userId = currentUserId;
-
-                        if (userId == null) {
-                          onLoginRequired();
-                          return Future.value();
-                        }
-
-                        return _communityRepository.createReport(
-                          targetType: targetType,
-                          targetId: targetId,
-                          postId: postId,
-                          reporterId: userId,
-                          reason: reason,
-                          description: description,
-                        );
-                      },
-                      isLikedStream: _communityRepository.watchPostLike(
-                        postId: posts[index].id,
-                        userId: currentUserId,
-                      ),
-                      onToggleLike: () {
-                        final userId = currentUserId;
-
-                        if (userId == null) {
-                          onLoginRequired();
-                          return Future.value();
-                        }
-
-                        return _communityRepository.togglePostLike(
-                          postId: posts[index].id,
-                          userId: userId,
-                        );
-                      },
                     );
                   },
                 );
@@ -183,37 +119,19 @@ class CommunityPage extends StatelessWidget {
 class _CommunityPostCard extends StatelessWidget {
   const _CommunityPostCard({
     required this.post,
+    required this.communityRepository,
     required this.currentUserId,
     required this.currentUserName,
     required this.isAdmin,
     required this.onLoginRequired,
-    required this.onDelete,
-    required this.commentsStream,
-    required this.onCreateComment,
-    required this.onDeleteComment,
-    required this.onCreateReport,
-    required this.isLikedStream,
-    required this.onToggleLike,
   });
 
   final CommunityPost post;
+  final CommunityRepository communityRepository;
   final String? currentUserId;
   final String? currentUserName;
   final bool isAdmin;
   final VoidCallback onLoginRequired;
-  final Future<void> Function(String postId) onDelete;
-  final Stream<List<CommunityComment>> commentsStream;
-  final Future<void> Function({required String content}) onCreateComment;
-  final Future<void> Function(String commentId) onDeleteComment;
-  final Future<void> Function({
-    required String targetType,
-    required String targetId,
-    required String postId,
-    required String reason,
-    String? description,
-  }) onCreateReport;
-  final Stream<bool> isLikedStream;
-  final Future<void> Function() onToggleLike;
 
   @override
   Widget build(BuildContext context) {
@@ -231,13 +149,7 @@ class _CommunityPostCard extends StatelessWidget {
                 currentUserName: currentUserName,
                 isAdmin: isAdmin,
                 onLoginRequired: onLoginRequired,
-                onDelete: onDelete,
-                commentsStream: commentsStream,
-                onCreateComment: onCreateComment,
-                onDeleteComment: onDeleteComment,
-                onCreateReport: onCreateReport,
-                isLikedStream: isLikedStream,
-                onToggleLike: onToggleLike,
+                communityRepository: communityRepository,
               ),
             ),
           );
@@ -285,7 +197,10 @@ class _CommunityPostCard extends StatelessWidget {
                     ),
                   ),
                   StreamBuilder<bool>(
-                    stream: isLikedStream,
+                    stream: communityRepository.watchPostLike(
+                      postId: post.id,
+                      userId: currentUserId,
+                    ),
                     initialData: false,
                     builder: (context, snapshot) {
                       final isLiked = snapshot.data ?? false;
@@ -294,7 +209,7 @@ class _CommunityPostCard extends StatelessWidget {
                         icon: isLiked ? Icons.favorite : Icons.favorite_border,
                         color: isLiked ? mainColor : greyColor,
                         count: post.likeCount,
-                        onPressed: onToggleLike,
+                        onPressed: () => _toggleLike(context),
                       );
                     },
                   ),
@@ -339,6 +254,20 @@ class _CommunityPostCard extends StatelessWidget {
 
   String _twoDigits(int value) {
     return value.toString().padLeft(2, '0');
+  }
+
+  Future<void> _toggleLike(BuildContext context) async {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      onLoginRequired();
+      return;
+    }
+
+    await communityRepository.togglePostLike(
+      postId: post.id,
+      userId: userId,
+    );
   }
 }
 
