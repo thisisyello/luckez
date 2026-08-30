@@ -112,6 +112,7 @@ class _StatsPageState extends State<StatsPage> {
                   frequencies: frequencies,
                   maxCount: maxCount,
                   winningRounds: widget.winningRounds,
+                  includeBonusNumber: includeBonusNumber,
                 ),
               ),
             ],
@@ -166,6 +167,7 @@ class _StatsBody extends StatelessWidget {
     required this.frequencies,
     required this.maxCount,
     required this.winningRounds,
+    required this.includeBonusNumber,
   });
 
   final bool isLoading;
@@ -174,6 +176,7 @@ class _StatsBody extends StatelessWidget {
   final List<LottoNumberFrequency> frequencies;
   final int maxCount;
   final List<LottoWinningRound> winningRounds;
+  final bool includeBonusNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -199,6 +202,8 @@ class _StatsBody extends StatelessWidget {
       return _NumberFrequencyList(
         frequencies: frequencies,
         maxCount: maxCount,
+        roundCount: winningRounds.length,
+        includeBonusNumber: includeBonusNumber,
       );
     }
 
@@ -247,7 +252,7 @@ class _StatsSkeletonList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 112),
       itemCount: 8,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, __) => const _StatsSkeletonCard(),
@@ -383,23 +388,161 @@ class _NumberFrequencyList extends StatelessWidget {
   const _NumberFrequencyList({
     required this.frequencies,
     required this.maxCount,
+    required this.roundCount,
+    required this.includeBonusNumber,
   });
 
   final List<LottoNumberFrequency> frequencies;
   final int maxCount;
+  final int roundCount;
+  final bool includeBonusNumber;
 
   @override
   Widget build(BuildContext context) {
+    final averageCount = frequencies.isEmpty
+        ? 0.0
+        : frequencies.fold<int>(0, (sum, item) => sum + item.count) /
+            frequencies.length;
+
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      itemCount: frequencies.length,
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 112),
+      itemCount: frequencies.length + 1,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (context, index) {
+        if (index == 0) {
+          return _FrequencySummaryCard(
+            frequencies: frequencies,
+            roundCount: roundCount,
+            averageCount: averageCount,
+            includeBonusNumber: includeBonusNumber,
+          );
+        }
+
         return _NumberFrequencyCard(
-          frequency: frequencies[index],
+          frequency: frequencies[index - 1],
           maxCount: maxCount,
+          roundCount: roundCount,
+          averageCount: averageCount,
         );
       },
+    );
+  }
+}
+
+class _FrequencySummaryCard extends StatelessWidget {
+  const _FrequencySummaryCard({
+    required this.frequencies,
+    required this.roundCount,
+    required this.averageCount,
+    required this.includeBonusNumber,
+  });
+
+  final List<LottoNumberFrequency> frequencies;
+  final int roundCount;
+  final double averageCount;
+  final bool includeBonusNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    final mostFrequent = frequencies.first;
+    final leastFrequent = frequencies.last;
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '출현 요약',
+            style: TextStyle(
+              color: blackColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryMetric(
+                  label: '분석 회차',
+                  value: '$roundCount회',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SummaryMetric(
+                  label: '평균 출현',
+                  value: '${averageCount.toStringAsFixed(1)}회',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _SummaryMetric(
+                  label: '최다 출현',
+                  value: '${mostFrequent.number}번 · ${mostFrequent.count}회',
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _SummaryMetric(
+                  label: '최소 출현',
+                  value: '${leastFrequent.number}번 · ${leastFrequent.count}회',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryMetric extends StatelessWidget {
+  const _SummaryMetric({
+    required this.label,
+    required this.value,
+  });
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: greyColor,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: blackColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -408,14 +551,20 @@ class _NumberFrequencyCard extends StatelessWidget {
   const _NumberFrequencyCard({
     required this.frequency,
     required this.maxCount,
+    required this.roundCount,
+    required this.averageCount,
   });
 
   final LottoNumberFrequency frequency;
   final int maxCount;
+  final int roundCount;
+  final double averageCount;
 
   @override
   Widget build(BuildContext context) {
     final progress = maxCount == 0 ? 0.0 : frequency.count / maxCount;
+    final percent = roundCount == 0 ? 0.0 : frequency.count / roundCount * 100;
+    final averageDiff = frequency.count - averageCount;
 
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -446,15 +595,15 @@ class _NumberFrequencyCard extends StatelessWidget {
                       style: const TextStyle(
                         color: blackColor,
                         fontSize: 15,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
-                      '${frequency.count}회',
+                      '${frequency.count}회 · ${percent.toStringAsFixed(1)}%',
                       style: const TextStyle(
                         color: blackColor,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
@@ -471,12 +620,30 @@ class _NumberFrequencyCard extends StatelessWidget {
                     ),
                   ),
                 ),
+                const SizedBox(height: 7),
+                Text(
+                  _averageDiffLabel(averageDiff),
+                  style: const TextStyle(
+                    color: greyColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _averageDiffLabel(double diff) {
+    if (diff.abs() < 0.05) {
+      return '평균과 비슷해요';
+    }
+
+    final sign = diff > 0 ? '+' : '-';
+    return '평균보다 $sign${diff.abs().toStringAsFixed(1)}회';
   }
 }
 
