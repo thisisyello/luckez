@@ -161,6 +161,18 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
         allow update: if false;
       }
+
+      // 내가 쓴 댓글 목록 캐시
+      match /myComments/{commentId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && request.resource.data.commentId == commentId
+          && request.resource.data.postId is string;
+        allow update: if (isOwner(userId) || isAdmin())
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedAt'])
+          && request.resource.data.deletedAt != null;
+        allow delete: if false;
+      }
     }
 
     // 위에서 허용하지 않은 모든 접근은 차단

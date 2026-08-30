@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_liked_post.dart';
+import 'package:luckez/models/community_my_comment.dart';
 import 'package:luckez/models/community_post.dart';
 
 class CommunityRepository {
@@ -42,47 +43,88 @@ class CommunityRepository {
     required String content,
     required String authorId,
     required String authorName,
-  }) {
-    final now = FieldValue.serverTimestamp();
+  }) async {
     final postRef = _postsCollection().doc(postId);
     final commentRef = _commentsCollection(postId).doc();
-    final batch = _firestore.batch();
+    final myCommentRef = _myCommentsCollection(authorId).doc(commentRef.id);
 
-    batch.set(commentRef, {
-      'content': content,
-      'authorId': authorId,
-      'authorName': authorName,
-      'createdAt': now,
-      'updatedAt': now,
-      'deletedAt': null,
-    });
-    batch.update(postRef, {
-      'commentCount': FieldValue.increment(1),
-      'updatedAt': now,
-    });
+    await _firestore.runTransaction((transaction) async {
+      final postSnapshot = await transaction.get(postRef);
 
-    return batch.commit();
+      if (!postSnapshot.exists) {
+        throw StateError('Post does not exist.');
+      }
+
+      final post = CommunityPost.fromMap(postSnapshot.id, postSnapshot.data()!);
+
+      if (post.isDeleted) {
+        throw StateError('Post has been deleted.');
+      }
+
+      final now = FieldValue.serverTimestamp();
+
+      transaction.set(commentRef, {
+        'content': content,
+        'authorId': authorId,
+        'authorName': authorName,
+        'createdAt': now,
+        'updatedAt': now,
+        'deletedAt': null,
+      });
+      transaction.set(myCommentRef, {
+        'commentId': commentRef.id,
+        'postId': post.id,
+        'postTitle': post.title,
+        'content': content,
+        'createdAt': now,
+        'deletedAt': null,
+      });
+      transaction.update(postRef, {
+        'commentCount': FieldValue.increment(1),
+        'updatedAt': now,
+      });
+    });
   }
 
   Future<void> deleteComment({
     required String postId,
     required String commentId,
-  }) {
-    final now = FieldValue.serverTimestamp();
+  }) async {
     final postRef = _postsCollection().doc(postId);
     final commentRef = _commentsCollection(postId).doc(commentId);
-    final batch = _firestore.batch();
 
-    batch.update(commentRef, {
-      'deletedAt': now,
-      'updatedAt': now,
-    });
-    batch.update(postRef, {
-      'commentCount': FieldValue.increment(-1),
-      'updatedAt': now,
-    });
+    await _firestore.runTransaction((transaction) async {
+      final commentSnapshot = await transaction.get(commentRef);
 
-    return batch.commit();
+      if (!commentSnapshot.exists) {
+        throw StateError('Comment does not exist.');
+      }
+
+      final comment = CommunityComment.fromMap(
+        commentSnapshot.id,
+        commentSnapshot.data()!,
+      );
+      final myCommentRef =
+          _myCommentsCollection(comment.authorId).doc(commentId);
+      final myCommentSnapshot = await transaction.get(myCommentRef);
+      final now = FieldValue.serverTimestamp();
+
+      transaction.update(commentRef, {
+        'deletedAt': now,
+        'updatedAt': now,
+      });
+
+      if (myCommentSnapshot.exists) {
+        transaction.update(myCommentRef, {
+          'deletedAt': now,
+        });
+      }
+
+      transaction.update(postRef, {
+        'commentCount': FieldValue.increment(-1),
+        'updatedAt': now,
+      });
+    });
   }
 
   Future<void> togglePostLike({
@@ -202,6 +244,19 @@ class CommunityRepository {
         );
   }
 
+  Stream<List<CommunityMyComment>> watchMyComments(String userId) {
+    return _myCommentsCollection(userId)
+        .orderBy('createdAt', descending: true)
+        .limit(50)
+        .snapshots()
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => CommunityMyComment.fromMap(doc.id, doc.data()))
+              .where((comment) => !comment.isDeleted)
+              .toList(),
+        );
+  }
+
   Stream<bool> watchPostLike({
     required String postId,
     required String? userId,
@@ -248,5 +303,11 @@ class CommunityRepository {
     String userId,
   ) {
     return _firestore.collection('users').doc(userId).collection('likedPosts');
+  }
+
+  CollectionReference<Map<String, dynamic>> _myCommentsCollection(
+    String userId,
+  ) {
+    return _firestore.collection('users').doc(userId).collection('myComments');
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/pages/liked_posts_page.dart';
+import 'package:luckez/pages/my_comments_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
@@ -154,11 +155,26 @@ class AccountPageContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
               ],
-              AppButton.neutral(
-                icon: Icons.favorite_border,
-                label: '좋아요한 글',
-                onPressed: () => _openLikedPostsPage(context),
-                height: 54,
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton.neutral(
+                      icon: Icons.favorite_border,
+                      label: '좋아요한 글',
+                      onPressed: () => _openLikedPostsPage(context),
+                      height: 54,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AppButton.neutral(
+                      icon: Icons.mode_comment_outlined,
+                      label: '내 댓글',
+                      onPressed: () => _openMyCommentsPage(context),
+                      height: 54,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
               AppButton.neutral(
@@ -184,6 +200,26 @@ class AccountPageContent extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LikedPostsPage(
+          userId: userId,
+          currentUserName: currentUserName,
+          isAdmin: isAdmin,
+          communityRepository: _communityRepository,
+          onLoginRequired: () {},
+        ),
+      ),
+    );
+  }
+
+  void _openMyCommentsPage(BuildContext context) {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MyCommentsPage(
           userId: userId,
           currentUserName: currentUserName,
           isAdmin: isAdmin,
