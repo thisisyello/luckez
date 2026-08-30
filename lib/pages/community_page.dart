@@ -112,6 +112,23 @@ class CommunityPage extends StatelessWidget {
                           description: description,
                         );
                       },
+                      isLikedStream: _communityRepository.watchPostLike(
+                        postId: posts[index].id,
+                        userId: currentUserId,
+                      ),
+                      onToggleLike: () {
+                        final userId = currentUserId;
+
+                        if (userId == null) {
+                          onLoginRequired();
+                          return Future.value();
+                        }
+
+                        return _communityRepository.togglePostLike(
+                          postId: posts[index].id,
+                          userId: userId,
+                        );
+                      },
                     );
                   },
                 );
@@ -175,6 +192,8 @@ class _CommunityPostCard extends StatelessWidget {
     required this.onCreateComment,
     required this.onDeleteComment,
     required this.onCreateReport,
+    required this.isLikedStream,
+    required this.onToggleLike,
   });
 
   final CommunityPost post;
@@ -193,6 +212,8 @@ class _CommunityPostCard extends StatelessWidget {
     required String reason,
     String? description,
   }) onCreateReport;
+  final Stream<bool> isLikedStream;
+  final Future<void> Function() onToggleLike;
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +236,8 @@ class _CommunityPostCard extends StatelessWidget {
                 onCreateComment: onCreateComment,
                 onDeleteComment: onDeleteComment,
                 onCreateReport: onCreateReport,
+                isLikedStream: isLikedStream,
+                onToggleLike: onToggleLike,
               ),
             ),
           );
@@ -261,19 +284,26 @@ class _CommunityPostCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const Icon(
-                    Icons.mode_comment_outlined,
-                    size: 15,
-                    color: greyColor,
+                  StreamBuilder<bool>(
+                    stream: isLikedStream,
+                    initialData: false,
+                    builder: (context, snapshot) {
+                      final isLiked = snapshot.data ?? false;
+
+                      return _PostCountButton(
+                        icon: isLiked ? Icons.favorite : Icons.favorite_border,
+                        color: isLiked ? mainColor : greyColor,
+                        count: post.likeCount,
+                        onPressed: onToggleLike,
+                      );
+                    },
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${post.commentCount}',
-                    style: const TextStyle(
-                      color: greyColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  const SizedBox(width: 10),
+                  _PostCountButton(
+                    icon: Icons.mode_comment_outlined,
+                    color: greyColor,
+                    count: post.commentCount,
+                    onPressed: null,
                   ),
                 ],
               ),
@@ -309,6 +339,50 @@ class _CommunityPostCard extends StatelessWidget {
 
   String _twoDigits(int value) {
     return value.toString().padLeft(2, '0');
+  }
+}
+
+class _PostCountButton extends StatelessWidget {
+  const _PostCountButton({
+    required this.icon,
+    required this.color,
+    required this.count,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final Color color;
+  final int count;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onPressed,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '$count',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

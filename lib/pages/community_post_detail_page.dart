@@ -20,6 +20,8 @@ class CommunityPostDetailPage extends StatefulWidget {
     required this.onCreateComment,
     required this.onDeleteComment,
     required this.onCreateReport,
+    required this.isLikedStream,
+    required this.onToggleLike,
   });
 
   final CommunityPost post;
@@ -38,6 +40,8 @@ class CommunityPostDetailPage extends StatefulWidget {
     required String reason,
     String? description,
   }) onCreateReport;
+  final Stream<bool> isLikedStream;
+  final Future<void> Function() onToggleLike;
 
   @override
   State<CommunityPostDetailPage> createState() =>
@@ -46,7 +50,14 @@ class CommunityPostDetailPage extends StatefulWidget {
 
 class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
   final _commentController = TextEditingController();
+  late int _likeCount;
   bool _isSubmittingComment = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _likeCount = widget.post.likeCount;
+  }
 
   @override
   void dispose() {
@@ -96,6 +107,9 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
               _PostContentCard(
                 post: widget.post,
                 formattedDate: _formatFullDate(widget.post.createdAt),
+                isLikedStream: widget.isLikedStream,
+                likeCount: _likeCount,
+                onToggleLike: _toggleLike,
               ),
               const SizedBox(height: 14),
               StreamBuilder<List<CommunityComment>>(
@@ -161,6 +175,32 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _toggleLike(bool isLiked) async {
+    final previousCount = _likeCount;
+
+    setState(() {
+      _likeCount = (_likeCount + (isLiked ? -1 : 1)).clamp(0, 1 << 31);
+    });
+
+    try {
+      await widget.onToggleLike();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _likeCount = previousCount;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('좋아요 처리에 실패했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   bool get _canDeletePost {
@@ -459,10 +499,16 @@ class _PostContentCard extends StatelessWidget {
   const _PostContentCard({
     required this.post,
     required this.formattedDate,
+    required this.isLikedStream,
+    required this.likeCount,
+    required this.onToggleLike,
   });
 
   final CommunityPost post;
   final String formattedDate;
+  final Stream<bool> isLikedStream;
+  final int likeCount;
+  final Future<void> Function(bool isLiked) onToggleLike;
 
   @override
   Widget build(BuildContext context) {
@@ -518,7 +564,60 @@ class _PostContentCard extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
+          const SizedBox(height: 18),
+          StreamBuilder<bool>(
+            stream: isLikedStream,
+            initialData: false,
+            builder: (context, snapshot) {
+              final isLiked = snapshot.data ?? false;
+
+              return Align(
+                alignment: Alignment.centerLeft,
+                child: _PostLikeButton(
+                  isLiked: isLiked,
+                  likeCount: likeCount,
+                  onPressed: () => onToggleLike(isLiked),
+                ),
+              );
+            },
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _PostLikeButton extends StatelessWidget {
+  const _PostLikeButton({
+    required this.isLiked,
+    required this.likeCount,
+    required this.onPressed,
+  });
+
+  final bool isLiked;
+  final int likeCount;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        isLiked ? Icons.favorite : Icons.favorite_border,
+        size: 18,
+      ),
+      label: Text('좋아요 $likeCount'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: isLiked ? mainColor : greyColor,
+        side: BorderSide(
+          color: isLiked ? mainColor : borderColor,
+        ),
+        visualDensity: VisualDensity.compact,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        textStyle: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

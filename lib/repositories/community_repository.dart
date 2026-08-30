@@ -22,6 +22,7 @@ class CommunityRepository {
       'authorId': authorId,
       'authorName': authorName,
       'commentCount': 0,
+      'likeCount': 0,
       'createdAt': now,
       'updatedAt': now,
       'deletedAt': null,
@@ -83,6 +84,36 @@ class CommunityRepository {
     return batch.commit();
   }
 
+  Future<void> togglePostLike({
+    required String postId,
+    required String userId,
+  }) async {
+    final postRef = _postsCollection().doc(postId);
+    final likeRef = _likesCollection(postId).doc(userId);
+
+    await _firestore.runTransaction((transaction) async {
+      final likeSnapshot = await transaction.get(likeRef);
+
+      if (likeSnapshot.exists) {
+        transaction.delete(likeRef);
+        transaction.update(postRef, {
+          'likeCount': FieldValue.increment(-1),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        return;
+      }
+
+      transaction.set(likeRef, {
+        'userId': userId,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      transaction.update(postRef, {
+        'likeCount': FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
   Future<void> createReport({
     required String targetType,
     required String targetId,
@@ -119,6 +150,19 @@ class CommunityRepository {
         );
   }
 
+  Stream<bool> watchPostLike({
+    required String postId,
+    required String? userId,
+  }) {
+    if (userId == null) {
+      return Stream<bool>.value(false);
+    }
+
+    return _likesCollection(postId).doc(userId).snapshots().map(
+          (snapshot) => snapshot.exists,
+        );
+  }
+
   Stream<List<CommunityComment>> watchComments(String postId) {
     return _commentsCollection(postId)
         .orderBy('createdAt')
@@ -138,6 +182,10 @@ class CommunityRepository {
 
   CollectionReference<Map<String, dynamic>> _commentsCollection(String postId) {
     return _postsCollection().doc(postId).collection('comments');
+  }
+
+  CollectionReference<Map<String, dynamic>> _likesCollection(String postId) {
+    return _postsCollection().doc(postId).collection('likes');
   }
 
   CollectionReference<Map<String, dynamic>> _reportsCollection() {

@@ -8,6 +8,7 @@ class CommunityPost {
     required this.authorId,
     required this.authorName,
     required this.commentCount,
+    required this.likeCount,
     required this.createdAt,
     this.updatedAt,
     this.deletedAt,
@@ -21,6 +22,7 @@ class CommunityPost {
       authorId: map['authorId'] as String? ?? '',
       authorName: map['authorName'] as String? ?? '익명',
       commentCount: map['commentCount'] as int? ?? 0,
+      likeCount: map['likeCount'] as int? ?? 0,
       createdAt: _dateTimeFromMapValue(map['createdAt']) ?? DateTime.now(),
       updatedAt: _dateTimeFromMapValue(map['updatedAt']),
       deletedAt: _dateTimeFromMapValue(map['deletedAt']),
@@ -33,6 +35,7 @@ class CommunityPost {
   final String authorId;
   final String authorName;
   final int commentCount;
+  final int likeCount;
   final DateTime createdAt;
   final DateTime? updatedAt;
   final DateTime? deletedAt;
