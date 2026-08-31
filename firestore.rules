@@ -162,9 +162,9 @@ service cloud.firestore {
         allow update: if false;
       }
 
-      // 내가 쓴 댓글 목록 캐시
+      // 내가 쓴 댓글 목록 캐시: 본인은 조회, 관리자는 삭제 동기화를 위해 조회/수정 허용
       match /myComments/{commentId} {
-        allow read: if isOwner(userId);
+        allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId)
           && request.resource.data.commentId == commentId
           && request.resource.data.postId is string;
