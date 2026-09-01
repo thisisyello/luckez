@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/pages/liked_posts_page.dart';
 import 'package:luckez/pages/my_comments_page.dart';
 import 'package:luckez/pages/my_posts_page.dart';
+import 'package:luckez/pages/profile_page.dart';
+import 'package:luckez/pages/purchased_numbers_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
@@ -24,12 +27,16 @@ class AccountPage extends StatelessWidget {
     required this.isLoggedIn,
     required this.savedNumbersCount,
     required this.purchasedNumbersCount,
+    required this.savedNumbers,
     required this.currentUserId,
     required this.currentUserName,
+    required this.currentUserEmail,
+    required this.currentUserPhotoUrl,
     required this.isAdmin,
     required this.onGooglePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
+    this.onSavedNumbersPressed,
     this.onSignOutPressed,
     this.onWinningRoundSubmit,
     this.initialWinningRound,
@@ -39,12 +46,16 @@ class AccountPage extends StatelessWidget {
   final bool isLoggedIn;
   final int savedNumbersCount;
   final int purchasedNumbersCount;
+  final List<SavedLottoNumber> savedNumbers;
   final String? currentUserId;
   final String? currentUserName;
+  final String? currentUserEmail;
+  final String? currentUserPhotoUrl;
   final bool isAdmin;
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
+  final VoidCallback? onSavedNumbersPressed;
   final VoidCallback? onSignOutPressed;
   final WinningRoundSubmitted? onWinningRoundSubmit;
   final int? initialWinningRound;
@@ -71,12 +82,16 @@ class AccountPage extends StatelessWidget {
         isLoggedIn: isLoggedIn,
         savedNumbersCount: savedNumbersCount,
         purchasedNumbersCount: purchasedNumbersCount,
+        savedNumbers: savedNumbers,
         currentUserId: currentUserId,
         currentUserName: currentUserName,
+        currentUserEmail: currentUserEmail,
+        currentUserPhotoUrl: currentUserPhotoUrl,
         isAdmin: isAdmin,
         onGooglePressed: onGooglePressed,
         onEmailLoginPressed: onEmailLoginPressed,
         onEmailSignUpPressed: onEmailSignUpPressed,
+        onSavedNumbersPressed: onSavedNumbersPressed,
         onSignOutPressed: onSignOutPressed,
         onWinningRoundSubmit: onWinningRoundSubmit,
         initialWinningRound: initialWinningRound,
@@ -94,12 +109,16 @@ class AccountPageContent extends StatelessWidget {
     required this.isLoggedIn,
     required this.savedNumbersCount,
     required this.purchasedNumbersCount,
+    required this.savedNumbers,
     required this.currentUserId,
     required this.currentUserName,
+    required this.currentUserEmail,
+    required this.currentUserPhotoUrl,
     required this.isAdmin,
     required this.onGooglePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
+    this.onSavedNumbersPressed,
     this.onSignOutPressed,
     this.onWinningRoundSubmit,
     this.initialWinningRound,
@@ -109,12 +128,16 @@ class AccountPageContent extends StatelessWidget {
   final bool isLoggedIn;
   final int savedNumbersCount;
   final int purchasedNumbersCount;
+  final List<SavedLottoNumber> savedNumbers;
   final String? currentUserId;
   final String? currentUserName;
+  final String? currentUserEmail;
+  final String? currentUserPhotoUrl;
   final bool isAdmin;
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
+  final VoidCallback? onSavedNumbersPressed;
   final VoidCallback? onSignOutPressed;
   final WinningRoundSubmitted? onWinningRoundSubmit;
   final int? initialWinningRound;
@@ -128,12 +151,14 @@ class AccountPageContent extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           children: [
-            _AccountStatusCard(
+            _AccountProfileCard(
               isLoggedIn: isLoggedIn,
-              savedNumbersCount: savedNumbersCount,
-              purchasedNumbersCount: purchasedNumbersCount,
+              displayName: currentUserName,
+              email: currentUserEmail,
+              photoUrl: currentUserPhotoUrl,
+              onTap: isLoggedIn ? () => _openProfilePage(context) : null,
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 18),
             if (!isLoggedIn) ...[
               AppButton.primary(
                 icon: Icons.login,
@@ -156,6 +181,25 @@ class AccountPageContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
               ],
+              _AccountSectionTitle(title: '나의 번호'),
+              _AccountActivityMenu(
+                items: [
+                  _AccountActivityMenuItemData(
+                    icon: Icons.confirmation_number_outlined,
+                    title: '저장한 번호',
+                    trailingText: '$savedNumbersCount개',
+                    onTap: () => _openSavedNumbers(context),
+                  ),
+                  _AccountActivityMenuItemData(
+                    icon: Icons.shopping_bag_outlined,
+                    title: '구매한 번호',
+                    trailingText: '$purchasedNumbersCount개',
+                    onTap: () => _openPurchasedNumbersPage(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _AccountSectionTitle(title: '나의 활동'),
               _AccountActivityMenu(
                 items: [
                   _AccountActivityMenuItemData(
@@ -170,7 +214,7 @@ class AccountPageContent extends StatelessWidget {
                   ),
                   _AccountActivityMenuItemData(
                     icon: Icons.favorite_border,
-                    title: '좋아요한 글',
+                    title: '내가 좋아요한 글',
                     onTap: () => _openLikedPostsPage(context),
                   ),
                 ],
@@ -193,6 +237,38 @@ class AccountPageContent extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  void _openProfilePage(BuildContext context) {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProfilePage(
+          userId: userId,
+          displayName: currentUserName,
+          email: currentUserEmail,
+          photoUrl: currentUserPhotoUrl,
+          role: isAdmin ? 'admin' : 'user',
+        ),
+      ),
+    );
+  }
+
+  void _openSavedNumbers(BuildContext context) {
+    onSavedNumbersPressed?.call();
+  }
+
+  void _openPurchasedNumbersPage(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PurchasedNumbersPage(savedNumbers: savedNumbers),
       ),
     );
   }
@@ -342,128 +418,166 @@ class AccountPageContent extends StatelessWidget {
   }
 }
 
-class _AccountStatusCard extends StatelessWidget {
-  const _AccountStatusCard({
+class _AccountProfileCard extends StatelessWidget {
+  const _AccountProfileCard({
     required this.isLoggedIn,
-    required this.savedNumbersCount,
-    required this.purchasedNumbersCount,
+    required this.displayName,
+    required this.email,
+    required this.photoUrl,
+    required this.onTap,
   });
 
   final bool isLoggedIn;
-  final int savedNumbersCount;
-  final int purchasedNumbersCount;
+  final String? displayName;
+  final String? email;
+  final String? photoUrl;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final title = isLoggedIn
+        ? _displayText(displayName) ?? _displayText(email) ?? '익명'
+        : '로그인이 필요해요';
+    final subtitle = isLoggedIn
+        ? _displayText(email) ?? '내 정보를 확인할 수 있어요'
+        : '번호 저장과 내 번호 확인은 로그인 후 사용할 수 있어요';
+
+    return Material(
+      color: surfaceColor,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: AppCard(
+          showShadow: false,
+          child: Row(
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: mainColor.withValues(alpha: 0.12),
-                ),
-                child: Icon(
-                  isLoggedIn ? Icons.person : Icons.person_outline,
-                  color: mainColor,
-                ),
-              ),
+              _AccountProfileAvatar(photoUrl: isLoggedIn ? photoUrl : null),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isLoggedIn ? '로그인됨' : '로그인이 필요해요',
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: blackColor,
                         fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      isLoggedIn
-                          ? '저장번호와 알림을 사용할 수 있어요'
-                          : '번호 저장과 내 번호 확인은 로그인 후 사용할 수 있어요',
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: greyColor,
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
               ),
+              if (isLoggedIn) ...[
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.chevron_right,
+                  color: greyColor,
+                  size: 20,
+                ),
+              ],
             ],
           ),
-          const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                child: _AccountStatItem(
-                  label: '저장한 번호',
-                  value: '$savedNumbersCount개',
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _AccountStatItem(
-                  label: '구매 완료',
-                  value: '$purchasedNumbersCount개',
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  String? _displayText(String? value) {
+    final trimmed = value?.trim();
+
+    if (trimmed == null || trimmed.isEmpty) {
+      return null;
+    }
+
+    return trimmed;
+  }
+}
+
+class _AccountProfileAvatar extends StatelessWidget {
+  const _AccountProfileAvatar({required this.photoUrl});
+
+  final String? photoUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = photoUrl?.trim();
+
+    if (url != null && url.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          url,
+          width: 44,
+          height: 44,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const _FallbackAccountAvatar(),
+        ),
+      );
+    }
+
+    return const _FallbackAccountAvatar();
+  }
+}
+
+class _FallbackAccountAvatar extends StatelessWidget {
+  const _FallbackAccountAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: mainColor.withValues(alpha: 0.12),
+      ),
+      child: const Icon(
+        Icons.account_circle_outlined,
+        color: mainColor,
+        size: 28,
       ),
     );
   }
 }
 
-class _AccountStatItem extends StatelessWidget {
-  const _AccountStatItem({
-    required this.label,
-    required this.value,
-  });
+class _AccountSectionTitle extends StatelessWidget {
+  const _AccountSectionTitle({required this.title});
 
-  final String label;
-  final String value;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xffF7F7F8),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
+      child: Row(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: greyColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          const Expanded(child: Divider(color: Color(0xffE8E8E8))),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: greyColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              color: blackColor,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          const Expanded(child: Divider(color: Color(0xffE8E8E8))),
         ],
       ),
     );
@@ -475,11 +589,13 @@ class _AccountActivityMenuItemData {
     required this.icon,
     required this.title,
     required this.onTap,
+    this.trailingText,
   });
 
   final IconData icon;
   final String title;
   final VoidCallback onTap;
+  final String? trailingText;
 }
 
 class _AccountActivityMenu extends StatelessWidget {
@@ -518,7 +634,6 @@ class _AccountActivityMenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: item.onTap,
-      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
         child: Row(
@@ -539,6 +654,17 @@ class _AccountActivityMenuItem extends StatelessWidget {
                 ),
               ),
             ),
+            if (item.trailingText != null) ...[
+              Text(
+                item.trailingText!,
+                style: const TextStyle(
+                  color: greyColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
             const Icon(
               Icons.chevron_right,
               color: greyColor,

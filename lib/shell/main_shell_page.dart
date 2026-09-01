@@ -394,8 +394,11 @@ class _MainShellPageState extends State<MainShellPage> {
                   isLoggedIn: false,
                   savedNumbersCount: savedNumbers.length,
                   purchasedNumbersCount: _purchasedNumbersCount,
+                  savedNumbers: const [],
                   currentUserId: null,
                   currentUserName: null,
+                  currentUserEmail: null,
+                  currentUserPhotoUrl: null,
                   isAdmin: false,
                   onGooglePressed: _signInWithGoogle,
                   onEmailLoginPressed: _signInWithEmail,
@@ -554,12 +557,17 @@ class _MainShellPageState extends State<MainShellPage> {
           isLoggedIn: currentUserId != null,
           savedNumbersCount: savedNumbers.length,
           purchasedNumbersCount: _purchasedNumbersCount,
+          savedNumbers: List<SavedLottoNumber>.unmodifiable(savedNumbers),
           currentUserId: currentUserId,
           currentUserName: _currentUserName,
+          currentUserEmail: currentUser?.email,
+          currentUserPhotoUrl: currentUser?.photoURL,
           isAdmin: _isAdmin,
           onGooglePressed: _signInWithGoogle,
           onEmailLoginPressed: _signInWithEmail,
           onEmailSignUpPressed: _signUpWithEmail,
+          onSavedNumbersPressed:
+              currentUserId == null ? null : _openMyNumbersTabFromAccount,
           onSignOutPressed: currentUserId == null ? null : _signOut,
           onWinningRoundSubmit: _isAdmin ? _saveWinningRound : null,
           initialWinningRound: _isAdmin ? roundInfo.latestDrawRound + 1 : null,
@@ -567,6 +575,14 @@ class _MainShellPageState extends State<MainShellPage> {
         ),
       ),
     );
+  }
+
+  void _openMyNumbersTabFromAccount() {
+    Navigator.of(context).maybePop();
+
+    setState(() {
+      selectedIndex = 3;
+    });
   }
 
   Future<void> _signOut() async {
