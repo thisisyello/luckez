@@ -188,12 +188,7 @@ class _ProfilePageState extends State<ProfilePage> {
         displayName = trimmedName;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('이름을 수정했어요'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+      Navigator.of(context).pop(trimmedName);
     } catch (_) {
       if (!mounted) {
         return;

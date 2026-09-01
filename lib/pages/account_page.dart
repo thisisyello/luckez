@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
+import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/pages/liked_posts_page.dart';
+import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/my_comments_page.dart';
 import 'package:luckez/pages/my_posts_page.dart';
 import 'package:luckez/pages/profile_page.dart';
 import 'package:luckez/pages/purchased_numbers_page.dart';
-import 'package:luckez/repositories/community_repository.dart';
-import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
 import 'package:luckez/pages/winning_round_admin_page.dart';
+import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/app_button.dart';
@@ -105,9 +105,7 @@ class AccountPage extends StatelessWidget {
   }
 }
 
-class AccountPageContent extends StatelessWidget {
-  static final _communityRepository = CommunityRepository();
-
+class AccountPageContent extends StatefulWidget {
   const AccountPageContent({
     super.key,
     required this.isLoggedIn,
@@ -150,6 +148,29 @@ class AccountPageContent extends StatelessWidget {
   final WinningRoundRegisteredCheck? isWinningRoundRegistered;
 
   @override
+  State<AccountPageContent> createState() => _AccountPageContentState();
+}
+
+class _AccountPageContentState extends State<AccountPageContent> {
+  static final _communityRepository = CommunityRepository();
+  late String? currentDisplayName;
+
+  @override
+  void initState() {
+    super.initState();
+    currentDisplayName = widget.currentUserName;
+  }
+
+  @override
+  void didUpdateWidget(AccountPageContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.currentUserName != widget.currentUserName) {
+      currentDisplayName = widget.currentUserName;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
@@ -158,14 +179,14 @@ class AccountPageContent extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
           children: [
             _AccountProfileCard(
-              isLoggedIn: isLoggedIn,
-              displayName: currentUserName,
-              email: currentUserEmail,
-              photoUrl: currentUserPhotoUrl,
-              onTap: isLoggedIn ? () => _openProfilePage(context) : null,
+              isLoggedIn: widget.isLoggedIn,
+              displayName: currentDisplayName,
+              email: widget.currentUserEmail,
+              photoUrl: widget.currentUserPhotoUrl,
+              onTap: widget.isLoggedIn ? () => _openProfilePage(context) : null,
             ),
             const SizedBox(height: 18),
-            if (!isLoggedIn) ...[
+            if (!widget.isLoggedIn) ...[
               AppButton.primary(
                 icon: Icons.login,
                 label: '로그인',
@@ -180,32 +201,32 @@ class AccountPageContent extends StatelessWidget {
                 height: 54,
               ),
             ] else ...[
-              if (onWinningRoundSubmit != null &&
-                  initialWinningRound != null) ...[
+              if (widget.onWinningRoundSubmit != null &&
+                  widget.initialWinningRound != null) ...[
                 _TemporaryAdminButton(
                   onPressed: () => _openWinningRoundAdminPage(context),
                 ),
                 const SizedBox(height: 10),
               ],
-              _AccountSectionTitle(title: '나의 번호'),
+              const _AccountSectionTitle(title: '나의 번호'),
               _AccountActivityMenu(
                 items: [
                   _AccountActivityMenuItemData(
                     icon: Icons.confirmation_number_outlined,
                     title: '저장한 번호',
-                    trailingText: '$savedNumbersCount개',
-                    onTap: () => _openSavedNumbers(context),
+                    trailingText: '${widget.savedNumbersCount}개',
+                    onTap: _openSavedNumbers,
                   ),
                   _AccountActivityMenuItemData(
                     icon: Icons.shopping_bag_outlined,
                     title: '구매한 번호',
-                    trailingText: '$purchasedNumbersCount개',
+                    trailingText: '${widget.purchasedNumbersCount}개',
                     onTap: () => _openPurchasedNumbersPage(context),
                   ),
                 ],
               ),
               const SizedBox(height: 18),
-              _AccountSectionTitle(title: '나의 활동'),
+              const _AccountSectionTitle(title: '나의 활동'),
               _AccountActivityMenu(
                 items: [
                   _AccountActivityMenuItemData(
@@ -228,7 +249,7 @@ class AccountPageContent extends StatelessWidget {
               const SizedBox(height: 18),
               Center(
                 child: TextButton.icon(
-                  onPressed: onSignOutPressed,
+                  onPressed: widget.onSignOutPressed,
                   icon: const Icon(Icons.logout, size: 17),
                   label: const Text('로그아웃'),
                   style: TextButton.styleFrom(
@@ -247,47 +268,50 @@ class AccountPageContent extends StatelessWidget {
     );
   }
 
-  void _openProfilePage(BuildContext context) {
-    final userId = currentUserId;
+  Future<void> _openProfilePage(BuildContext context) async {
+    final userId = widget.currentUserId;
+    final onSubmit = widget.onDisplayNameSubmit;
 
-    if (userId == null) {
+    if (userId == null || onSubmit == null) {
       return;
     }
 
-    final onSubmit = onDisplayNameSubmit;
-
-    if (onSubmit == null) {
-      return;
-    }
-
-    Navigator.of(context).push(
+    final updatedName = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => ProfilePage(
           userId: userId,
-          displayName: currentUserName,
-          email: currentUserEmail,
-          photoUrl: currentUserPhotoUrl,
-          role: isAdmin ? 'admin' : 'user',
+          displayName: currentDisplayName,
+          email: widget.currentUserEmail,
+          photoUrl: widget.currentUserPhotoUrl,
+          role: widget.isAdmin ? 'admin' : 'user',
           onDisplayNameSubmit: onSubmit,
         ),
       ),
     );
+
+    if (!mounted || updatedName == null || updatedName.trim().isEmpty) {
+      return;
+    }
+
+    setState(() {
+      currentDisplayName = updatedName.trim();
+    });
   }
 
-  void _openSavedNumbers(BuildContext context) {
-    onSavedNumbersPressed?.call();
+  void _openSavedNumbers() {
+    widget.onSavedNumbersPressed?.call();
   }
 
   void _openPurchasedNumbersPage(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PurchasedNumbersPage(savedNumbers: savedNumbers),
+        builder: (_) => PurchasedNumbersPage(savedNumbers: widget.savedNumbers),
       ),
     );
   }
 
   void _openMyPostsPage(BuildContext context) {
-    final userId = currentUserId;
+    final userId = widget.currentUserId;
 
     if (userId == null) {
       return;
@@ -297,8 +321,8 @@ class AccountPageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => MyPostsPage(
           userId: userId,
-          currentUserName: currentUserName,
-          isAdmin: isAdmin,
+          currentUserName: currentDisplayName,
+          isAdmin: widget.isAdmin,
           communityRepository: _communityRepository,
           onLoginRequired: () {},
         ),
@@ -307,7 +331,7 @@ class AccountPageContent extends StatelessWidget {
   }
 
   void _openLikedPostsPage(BuildContext context) {
-    final userId = currentUserId;
+    final userId = widget.currentUserId;
 
     if (userId == null) {
       return;
@@ -317,8 +341,8 @@ class AccountPageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => LikedPostsPage(
           userId: userId,
-          currentUserName: currentUserName,
-          isAdmin: isAdmin,
+          currentUserName: currentDisplayName,
+          isAdmin: widget.isAdmin,
           communityRepository: _communityRepository,
           onLoginRequired: () {},
         ),
@@ -327,7 +351,7 @@ class AccountPageContent extends StatelessWidget {
   }
 
   void _openMyCommentsPage(BuildContext context) {
-    final userId = currentUserId;
+    final userId = widget.currentUserId;
 
     if (userId == null) {
       return;
@@ -337,8 +361,8 @@ class AccountPageContent extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => MyCommentsPage(
           userId: userId,
-          currentUserName: currentUserName,
-          isAdmin: isAdmin,
+          currentUserName: currentDisplayName,
+          isAdmin: widget.isAdmin,
           communityRepository: _communityRepository,
           onLoginRequired: () {},
         ),
@@ -350,20 +374,20 @@ class AccountPageContent extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LoginPage(
-          onSubmit: onEmailLoginPressed,
-          onGooglePressed: onGooglePressed,
+          onSubmit: widget.onEmailLoginPressed,
+          onGooglePressed: widget.onGooglePressed,
           onSignUpPressed: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (_) => SignUpPage(
-                  onGooglePressed: onGooglePressed,
-                  onEmailSubmit: onEmailSignUpPressed,
+                  onGooglePressed: widget.onGooglePressed,
+                  onEmailSubmit: widget.onEmailSignUpPressed,
                   onLoginPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (_) => LoginPage(
-                          onSubmit: onEmailLoginPressed,
-                          onGooglePressed: onGooglePressed,
+                          onSubmit: widget.onEmailLoginPressed,
+                          onGooglePressed: widget.onGooglePressed,
                           onSignUpPressed: () => _openSignUpPage(context),
                         ),
                       ),
@@ -379,9 +403,9 @@ class AccountPageContent extends StatelessWidget {
   }
 
   void _openWinningRoundAdminPage(BuildContext context) {
-    final onSubmit = onWinningRoundSubmit;
-    final initialRound = initialWinningRound;
-    final isRegistered = isWinningRoundRegistered;
+    final onSubmit = widget.onWinningRoundSubmit;
+    final initialRound = widget.initialWinningRound;
+    final isRegistered = widget.isWinningRoundRegistered;
 
     if (onSubmit == null || initialRound == null || isRegistered == null) {
       return;
@@ -402,20 +426,20 @@ class AccountPageContent extends StatelessWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => SignUpPage(
-          onGooglePressed: onGooglePressed,
-          onEmailSubmit: onEmailSignUpPressed,
+          onGooglePressed: widget.onGooglePressed,
+          onEmailSubmit: widget.onEmailSignUpPressed,
           onLoginPressed: () {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
                 builder: (_) => LoginPage(
-                  onSubmit: onEmailLoginPressed,
-                  onGooglePressed: onGooglePressed,
+                  onSubmit: widget.onEmailLoginPressed,
+                  onGooglePressed: widget.onGooglePressed,
                   onSignUpPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
                         builder: (_) => SignUpPage(
-                          onGooglePressed: onGooglePressed,
-                          onEmailSubmit: onEmailSignUpPressed,
+                          onGooglePressed: widget.onGooglePressed,
+                          onEmailSubmit: widget.onEmailSignUpPressed,
                           onLoginPressed: () => _openLoginPage(context),
                         ),
                       ),
