@@ -38,6 +38,18 @@ class CommunityRepository {
     });
   }
 
+  Future<void> updatePost({
+    required String postId,
+    required String title,
+    required String content,
+  }) {
+    return _postsCollection().doc(postId).update({
+      'title': title,
+      'content': content,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   Future<void> createComment({
     required String postId,
     required String content,
@@ -83,6 +95,33 @@ class CommunityRepository {
         'commentCount': FieldValue.increment(1),
         'updatedAt': now,
       });
+    });
+  }
+
+  Future<void> updateComment({
+    required String postId,
+    required String commentId,
+    required String content,
+    required String authorId,
+  }) async {
+    final commentRef = _commentsCollection(postId).doc(commentId);
+    final myCommentRef = _myCommentsCollection(authorId).doc(commentId);
+
+    await _firestore.runTransaction((transaction) async {
+      final myCommentSnapshot = await transaction.get(myCommentRef);
+      final now = FieldValue.serverTimestamp();
+
+      transaction.update(commentRef, {
+        'content': content,
+        'updatedAt': now,
+      });
+
+      if (myCommentSnapshot.exists) {
+        transaction.update(myCommentRef, {
+          'content': content,
+          'updatedAt': now,
+        });
+      }
     });
   }
 

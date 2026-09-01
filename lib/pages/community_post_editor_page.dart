@@ -2,16 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 
+class CommunityPostEditorResult {
+  const CommunityPostEditorResult({
+    required this.title,
+    required this.content,
+  });
+
+  final String title;
+  final String content;
+}
+
 class CommunityPostEditorPage extends StatefulWidget {
   const CommunityPostEditorPage({
     super.key,
     required this.onSubmit,
+    this.initialTitle = '',
+    this.initialContent = '',
+    this.appBarTitle = '글쓰기',
+    this.submitLabel = '등록',
+    this.savingLabel = '등록 중',
   });
 
   final Future<void> Function({
     required String title,
     required String content,
   }) onSubmit;
+  final String initialTitle;
+  final String initialContent;
+  final String appBarTitle;
+  final String submitLabel;
+  final String savingLabel;
 
   @override
   State<CommunityPostEditorPage> createState() =>
@@ -22,6 +42,13 @@ class _CommunityPostEditorPageState extends State<CommunityPostEditorPage> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   var _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController.text = widget.initialTitle;
+    _contentController.text = widget.initialContent;
+  }
 
   @override
   void dispose() {
@@ -35,9 +62,9 @@ class _CommunityPostEditorPageState extends State<CommunityPostEditorPage> {
     return Scaffold(
       backgroundColor: const Color(0xffF7F7F8),
       appBar: AppBar(
-        title: const Text(
-          '글쓰기',
-          style: TextStyle(
+        title: Text(
+          widget.appBarTitle,
+          style: const TextStyle(
             color: blackColor,
             fontWeight: FontWeight.w800,
           ),
@@ -50,7 +77,7 @@ class _CommunityPostEditorPageState extends State<CommunityPostEditorPage> {
           TextButton(
             onPressed: _isSaving ? null : _submit,
             child: Text(
-              _isSaving ? '등록 중' : '등록',
+              _isSaving ? widget.savingLabel : widget.submitLabel,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
@@ -110,7 +137,7 @@ class _CommunityPostEditorPageState extends State<CommunityPostEditorPage> {
       setState(() {
         _isSaving = false;
       });
-      _showMessage('게시글 등록에 실패했어요');
+      _showMessage('${widget.submitLabel}에 실패했어요');
       return;
     }
 
@@ -118,7 +145,9 @@ class _CommunityPostEditorPageState extends State<CommunityPostEditorPage> {
       return;
     }
 
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(
+      CommunityPostEditorResult(title: title, content: content),
+    );
   }
 
   void _showMessage(String message) {

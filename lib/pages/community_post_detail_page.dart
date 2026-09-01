@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_post.dart';
 import 'package:luckez/models/community_report.dart';
+import 'package:luckez/pages/community_post_editor_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
@@ -33,12 +34,14 @@ class CommunityPostDetailPage extends StatefulWidget {
 
 class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
   final _commentController = TextEditingController();
+  late CommunityPost _post;
   late int _likeCount;
   bool _isSubmittingComment = false;
 
   @override
   void initState() {
     super.initState();
+    _post = widget.post;
     _likeCount = widget.post.likeCount;
   }
 
@@ -65,12 +68,17 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
         elevation: 0,
         iconTheme: const IconThemeData(color: blackColor),
         actions: [
+          if (_canEditPost)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: _openPostEditor,
+            ),
           IconButton(
             icon: const Icon(Icons.flag_outlined),
             onPressed: () => _openReportDialog(
               targetType: CommunityReportTargetType.post,
-              targetId: widget.post.id,
-              postId: widget.post.id,
+              targetId: _post.id,
+              postId: _post.id,
             ),
           ),
           if (_canDeletePost)
@@ -88,10 +96,10 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
             children: [
               _PostContentCard(
-                post: widget.post,
-                formattedDate: _formatFullDate(widget.post.createdAt),
+                post: _post,
+                formattedDate: _formatFullDate(_post.createdAt),
                 isLikedStream: widget.communityRepository.watchPostLike(
-                  postId: widget.post.id,
+                  postId: _post.id,
                   userId: widget.currentUserId,
                 ),
                 likeCount: _likeCount,
@@ -99,7 +107,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
               ),
               const SizedBox(height: 14),
               StreamBuilder<List<CommunityComment>>(
-                stream: widget.communityRepository.watchComments(widget.post.id),
+                stream: widget.communityRepository.watchComments(_post.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const _CommentSectionSkeleton();
@@ -139,15 +147,17 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
                           ...comments.map(
                             (comment) => _CommentTile(
                               comment: comment,
+                              canEdit: _canEditComment(comment),
                               canDelete: _canDeleteComment(comment),
                               formattedDate: _formatRelativeDate(
                                 comment.createdAt,
                               ),
+                              onEdit: () => _openCommentEditDialog(comment),
                               onDelete: () => _confirmDeleteComment(comment),
                               onReport: () => _openReportDialog(
                                 targetType: CommunityReportTargetType.comment,
                                 targetId: comment.id,
-                                postId: widget.post.id,
+                                postId: _post.id,
                               ),
                             ),
                           ),
@@ -179,7 +189,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
       }
 
       await widget.communityRepository.togglePostLike(
-        postId: widget.post.id,
+        postId: _post.id,
         userId: userId,
       );
     } catch (_) {
@@ -199,8 +209,16 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     }
   }
 
+  bool get _canEditPost {
+    return widget.currentUserId == _post.authorId;
+  }
+
   bool get _canDeletePost {
-    return widget.isAdmin || widget.currentUserId == widget.post.authorId;
+    return widget.isAdmin || widget.currentUserId == _post.authorId;
+  }
+
+  bool _canEditComment(CommunityComment comment) {
+    return widget.currentUserId == comment.authorId;
   }
 
   bool _canDeleteComment(CommunityComment comment) {
@@ -326,6 +344,109 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     );
   }
 
+  Future<void> _openPostEditor() async {
+    if (!_canEditPost) {
+      return;
+    }
+
+    final result = await Navigator.of(context).push<CommunityPostEditorResult>(
+      MaterialPageRoute(
+        builder: (_) => CommunityPostEditorPage(
+          initialTitle: _post.title,
+          initialContent: _post.content,
+          appBarTitle: '글 수정',
+          submitLabel: '수정',
+          savingLabel: '수정 중',
+          onSubmit: ({required title, required content}) async {
+            await widget.communityRepository.updatePost(
+              postId: _post.id,
+              title: title,
+              content: content,
+            );
+          },
+        ),
+      ),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    setState(() {
+      _post = _post.copyWith(
+        title: result.title,
+        content: result.content,
+        updatedAt: DateTime.now(),
+      );
+    });
+  }
+
+  Future<void> _openCommentEditDialog(CommunityComment comment) async {
+    if (!_canEditComment(comment)) {
+      return;
+    }
+
+    final controller = TextEditingController(text: comment.content);
+
+    final updatedContent = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('댓글 수정'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            minLines: 1,
+            maxLines: 4,
+            textInputAction: TextInputAction.newline,
+            decoration: const InputDecoration(
+              hintText: '댓글을 입력하세요',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(controller.text.trim()),
+              child: const Text('수정'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    final content = updatedContent?.trim();
+
+    if (content == null || content.isEmpty || content == comment.content) {
+      return;
+    }
+
+    try {
+      await widget.communityRepository.updateComment(
+        postId: _post.id,
+        commentId: comment.id,
+        content: content,
+        authorId: comment.authorId,
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('댓글 수정에 실패했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
+  }
+
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
 
@@ -344,7 +465,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
 
     try {
       await widget.communityRepository.createComment(
-        postId: widget.post.id,
+        postId: _post.id,
         content: content,
         authorId: widget.currentUserId!,
         authorName: widget.currentUserName ?? '익명',
@@ -397,7 +518,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
 
     try {
       await widget.communityRepository.deleteComment(
-        postId: widget.post.id,
+        postId: _post.id,
         commentId: comment.id,
       );
     } catch (_) {
@@ -440,7 +561,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     }
 
     try {
-      await widget.communityRepository.deletePost(widget.post.id);
+      await widget.communityRepository.deletePost(_post.id);
     } catch (_) {
       if (!context.mounted) {
         return;
@@ -747,15 +868,19 @@ class _CommentInput extends StatelessWidget {
 class _CommentTile extends StatelessWidget {
   const _CommentTile({
     required this.comment,
+    required this.canEdit,
     required this.canDelete,
     required this.formattedDate,
+    required this.onEdit,
     required this.onDelete,
     required this.onReport,
   });
 
   final CommunityComment comment;
+  final bool canEdit;
   final bool canDelete;
   final String formattedDate;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
   final VoidCallback onReport;
 
@@ -794,6 +919,23 @@ class _CommentTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 2),
+              if (canEdit) ...[
+                const SizedBox(width: 2),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(
+                    Icons.edit_outlined,
+                    size: 16,
+                    color: greyColor,
+                  ),
+                  onPressed: onEdit,
+                ),
+              ],
               IconButton(
                 visualDensity: VisualDensity.compact,
                 constraints: const BoxConstraints(

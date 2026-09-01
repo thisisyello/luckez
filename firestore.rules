@@ -34,6 +34,13 @@ service cloud.firestore {
       return isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
+    function isEditingPost() {
+      return isPostAuthor()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'content', 'updatedAt'])
+        && request.resource.data.title is string
+        && request.resource.data.content is string;
+    }
+
     function isSoftDeletingPost() {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedAt', 'updatedAt'])
         && request.resource.data.deletedAt != null;
@@ -41,6 +48,12 @@ service cloud.firestore {
 
     function isCommentAuthor() {
       return isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    function isEditingComment() {
+      return isCommentAuthor()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'updatedAt'])
+        && request.resource.data.content is string;
     }
 
     function isSoftDeletingComment() {
@@ -109,7 +122,8 @@ service cloud.firestore {
         && request.resource.data.commentCount == 0
         && request.resource.data.likeCount == 0
         && request.resource.data.deletedAt == null;
-      allow update: if ((isPostAuthor() || isAdmin()) && isSoftDeletingPost())
+      allow update: if isEditingPost()
+        || ((isPostAuthor() || isAdmin()) && isSoftDeletingPost())
         || isUpdatingPostCommentCount()
         || isUpdatingPostLikeCount();
       allow delete: if false;
@@ -120,7 +134,8 @@ service cloud.firestore {
         allow create: if isSignedIn()
           && request.resource.data.authorId == request.auth.uid
           && request.resource.data.deletedAt == null;
-        allow update: if (isCommentAuthor() || isAdmin()) && isSoftDeletingComment();
+        allow update: if isEditingComment()
+          || ((isCommentAuthor() || isAdmin()) && isSoftDeletingComment());
         allow delete: if false;
       }
 
@@ -168,9 +183,12 @@ service cloud.firestore {
         allow create: if isOwner(userId)
           && request.resource.data.commentId == commentId
           && request.resource.data.postId is string;
-        allow update: if (isOwner(userId) || isAdmin())
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedAt'])
-          && request.resource.data.deletedAt != null;
+        allow update: if (isOwner(userId)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'updatedAt'])
+            && request.resource.data.content is string)
+          || ((isOwner(userId) || isAdmin())
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['deletedAt'])
+            && request.resource.data.deletedAt != null);
         allow delete: if false;
       }
     }

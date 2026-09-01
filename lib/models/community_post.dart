@@ -40,6 +40,25 @@ class CommunityPost {
   final DateTime? updatedAt;
   final DateTime? deletedAt;
 
+  CommunityPost copyWith({
+    String? title,
+    String? content,
+    DateTime? updatedAt,
+  }) {
+    return CommunityPost(
+      id: id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      authorId: authorId,
+      authorName: authorName,
+      commentCount: commentCount,
+      likeCount: likeCount,
+      createdAt: createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt,
+    );
+  }
+
   bool get isDeleted => deletedAt != null;
 
   static DateTime? _dateTimeFromMapValue(Object? value) {
