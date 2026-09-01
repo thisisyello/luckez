@@ -3,7 +3,9 @@ import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/app_card.dart';
 
-class ProfilePage extends StatelessWidget {
+typedef DisplayNameSubmitted = Future<void> Function(String displayName);
+
+class ProfilePage extends StatefulWidget {
   const ProfilePage({
     super.key,
     required this.userId,
@@ -11,6 +13,7 @@ class ProfilePage extends StatelessWidget {
     required this.email,
     required this.photoUrl,
     required this.role,
+    required this.onDisplayNameSubmit,
   });
 
   final String userId;
@@ -18,11 +21,27 @@ class ProfilePage extends StatelessWidget {
   final String? email;
   final String? photoUrl;
   final String role;
+  final DisplayNameSubmitted onDisplayNameSubmit;
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late String? displayName;
+  bool isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    displayName = widget.displayName;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final name = _displayText(displayName) ?? _displayText(email) ?? '익명';
-    final emailText = _displayText(email) ?? '이메일 정보 없음';
+    final name =
+        _displayText(displayName) ?? _displayText(widget.email) ?? '익명';
+    final emailText = _displayText(widget.email) ?? '이메일 정보 없음';
 
     return Scaffold(
       backgroundColor: const Color(0xffF7F7F8),
@@ -49,7 +68,7 @@ class ProfilePage extends StatelessWidget {
                 showShadow: false,
                 child: Column(
                   children: [
-                    _ProfileAvatar(photoUrl: photoUrl, size: 72),
+                    _ProfileAvatar(photoUrl: widget.photoUrl, size: 72),
                     const SizedBox(height: 14),
                     Text(
                       name,
@@ -70,6 +89,20 @@ class ProfilePage extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                    const SizedBox(height: 14),
+                    TextButton.icon(
+                      onPressed:
+                          isSubmitting ? null : () => _openNameEditDialog(name),
+                      icon: const Icon(Icons.edit_outlined, size: 17),
+                      label: const Text('이름 수정'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: mainColor,
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -81,12 +114,12 @@ class ProfilePage extends StatelessWidget {
                   children: [
                     _ProfileInfoRow(
                       label: '회원 등급',
-                      value: role == 'admin' ? '관리자' : '일반 회원',
+                      value: widget.role == 'admin' ? '관리자' : '일반 회원',
                     ),
                     const Divider(height: 1, indent: 16, endIndent: 16),
                     _ProfileInfoRow(
                       label: '사용자 ID',
-                      value: userId,
+                      value: widget.userId,
                     ),
                   ],
                 ),
@@ -96,6 +129,89 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openNameEditDialog(String currentName) async {
+    final controller = TextEditingController(text: currentName);
+
+    final updatedName = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('이름 수정'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              labelText: '이름',
+              hintText: '표시할 이름을 입력하세요',
+            ),
+            onSubmitted: (value) => Navigator.pop(context, value.trim()),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: const Text('저장'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+
+    final trimmedName = updatedName?.trim();
+
+    if (trimmedName == null ||
+        trimmedName.isEmpty ||
+        trimmedName == displayName) {
+      return;
+    }
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      await widget.onDisplayNameSubmit(trimmedName);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        displayName = trimmedName;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이름을 수정했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이름 수정에 실패했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
+    }
   }
 
   String? _displayText(String? value) {

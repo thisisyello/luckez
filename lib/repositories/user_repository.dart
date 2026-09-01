@@ -50,6 +50,16 @@ class UserRepository {
     await userRef.set(updateData, SetOptions(merge: true));
   }
 
+  Future<void> updateDisplayName({
+    required String userId,
+    required String displayName,
+  }) {
+    return _usersCollection().doc(userId).set({
+      'displayName': displayName,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
   CollectionReference<Map<String, dynamic>> _usersCollection() {
     return _firestore.collection('users');
   }

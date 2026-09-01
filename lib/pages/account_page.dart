@@ -20,6 +20,7 @@ typedef WinningRoundSubmitted = Future<void> Function(
   LottoWinningRound winningRound,
 );
 typedef WinningRoundRegisteredCheck = bool Function(int round);
+typedef DisplayNameSubmitted = Future<void> Function(String displayName);
 
 class AccountPage extends StatelessWidget {
   const AccountPage({
@@ -36,6 +37,7 @@ class AccountPage extends StatelessWidget {
     required this.onGooglePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
+    this.onDisplayNameSubmit,
     this.onSavedNumbersPressed,
     this.onSignOutPressed,
     this.onWinningRoundSubmit,
@@ -55,6 +57,7 @@ class AccountPage extends StatelessWidget {
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
+  final DisplayNameSubmitted? onDisplayNameSubmit;
   final VoidCallback? onSavedNumbersPressed;
   final VoidCallback? onSignOutPressed;
   final WinningRoundSubmitted? onWinningRoundSubmit;
@@ -91,6 +94,7 @@ class AccountPage extends StatelessWidget {
         onGooglePressed: onGooglePressed,
         onEmailLoginPressed: onEmailLoginPressed,
         onEmailSignUpPressed: onEmailSignUpPressed,
+        onDisplayNameSubmit: onDisplayNameSubmit,
         onSavedNumbersPressed: onSavedNumbersPressed,
         onSignOutPressed: onSignOutPressed,
         onWinningRoundSubmit: onWinningRoundSubmit,
@@ -118,6 +122,7 @@ class AccountPageContent extends StatelessWidget {
     required this.onGooglePressed,
     required this.onEmailLoginPressed,
     required this.onEmailSignUpPressed,
+    this.onDisplayNameSubmit,
     this.onSavedNumbersPressed,
     this.onSignOutPressed,
     this.onWinningRoundSubmit,
@@ -137,6 +142,7 @@ class AccountPageContent extends StatelessWidget {
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
   final EmailPasswordSubmitted onEmailSignUpPressed;
+  final DisplayNameSubmitted? onDisplayNameSubmit;
   final VoidCallback? onSavedNumbersPressed;
   final VoidCallback? onSignOutPressed;
   final WinningRoundSubmitted? onWinningRoundSubmit;
@@ -248,6 +254,12 @@ class AccountPageContent extends StatelessWidget {
       return;
     }
 
+    final onSubmit = onDisplayNameSubmit;
+
+    if (onSubmit == null) {
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => ProfilePage(
@@ -256,6 +268,7 @@ class AccountPageContent extends StatelessWidget {
           email: currentUserEmail,
           photoUrl: currentUserPhotoUrl,
           role: isAdmin ? 'admin' : 'user',
+          onDisplayNameSubmit: onSubmit,
         ),
       ),
     );

@@ -66,6 +66,17 @@ class AuthService {
     return _firebaseAuth.signInWithCredential(credential);
   }
 
+  Future<void> updateDisplayName(String displayName) async {
+    final user = currentUser;
+
+    if (user == null) {
+      throw StateError('User is not signed in.');
+    }
+
+    await user.updateDisplayName(displayName);
+    await user.reload();
+  }
+
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
 

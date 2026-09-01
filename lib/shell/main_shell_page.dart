@@ -566,6 +566,7 @@ class _MainShellPageState extends State<MainShellPage> {
           onGooglePressed: _signInWithGoogle,
           onEmailLoginPressed: _signInWithEmail,
           onEmailSignUpPressed: _signUpWithEmail,
+          onDisplayNameSubmit: _updateDisplayName,
           onSavedNumbersPressed:
               currentUserId == null ? null : _openMyNumbersTabFromAccount,
           onSignOutPressed: currentUserId == null ? null : _signOut,
@@ -575,6 +576,29 @@ class _MainShellPageState extends State<MainShellPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _updateDisplayName(String displayName) async {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      _showComingSoonMessage('로그인이 필요해요');
+      return;
+    }
+
+    await _authService.updateDisplayName(displayName);
+    await _userRepository.updateDisplayName(
+      userId: userId,
+      displayName: displayName,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      currentUser = _authService.currentUser;
+    });
   }
 
   void _openMyNumbersTabFromAccount() {
