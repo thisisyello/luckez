@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/pages/liked_posts_page.dart';
 import 'package:luckez/pages/my_comments_page.dart';
+import 'package:luckez/pages/my_posts_page.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/pages/login_page.dart';
 import 'package:luckez/pages/sign_up_page.dart';
@@ -155,36 +156,62 @@ class AccountPageContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
               ],
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton.neutral(
-                      icon: Icons.favorite_border,
-                      label: '좋아요한 글',
-                      onPressed: () => _openLikedPostsPage(context),
-                      height: 54,
-                    ),
+              _AccountActivityMenu(
+                items: [
+                  _AccountActivityMenuItemData(
+                    icon: Icons.article_outlined,
+                    title: '내가 쓴 글',
+                    onTap: () => _openMyPostsPage(context),
                   ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: AppButton.neutral(
-                      icon: Icons.mode_comment_outlined,
-                      label: '내 댓글',
-                      onPressed: () => _openMyCommentsPage(context),
-                      height: 54,
-                    ),
+                  _AccountActivityMenuItemData(
+                    icon: Icons.mode_comment_outlined,
+                    title: '내 댓글',
+                    onTap: () => _openMyCommentsPage(context),
+                  ),
+                  _AccountActivityMenuItemData(
+                    icon: Icons.favorite_border,
+                    title: '좋아요한 글',
+                    onTap: () => _openLikedPostsPage(context),
                   ),
                 ],
               ),
-              const SizedBox(height: 10),
-              AppButton.neutral(
-                icon: Icons.logout,
-                label: '로그아웃',
-                onPressed: onSignOutPressed,
-                height: 54,
+              const SizedBox(height: 18),
+              Center(
+                child: TextButton.icon(
+                  onPressed: onSignOutPressed,
+                  icon: const Icon(Icons.logout, size: 17),
+                  label: const Text('로그아웃'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: greyColor,
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  void _openMyPostsPage(BuildContext context) {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => MyPostsPage(
+          userId: userId,
+          currentUserName: currentUserName,
+          isAdmin: isAdmin,
+          communityRepository: _communityRepository,
+          onLoginRequired: () {},
         ),
       ),
     );
@@ -438,6 +465,87 @@ class _AccountStatItem extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _AccountActivityMenuItemData {
+  const _AccountActivityMenuItemData({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+}
+
+class _AccountActivityMenu extends StatelessWidget {
+  const _AccountActivityMenu({required this.items});
+
+  final List<_AccountActivityMenuItemData> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      showShadow: false,
+      child: Column(
+        children: [
+          for (var index = 0; index < items.length; index++) ...[
+            _AccountActivityMenuItem(item: items[index]),
+            if (index != items.length - 1)
+              const Divider(
+                height: 1,
+                indent: 56,
+                color: Color(0xffEEEEEE),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AccountActivityMenuItem extends StatelessWidget {
+  const _AccountActivityMenuItem({required this.item});
+
+  final _AccountActivityMenuItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: item.onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        child: Row(
+          children: [
+            Icon(
+              item.icon,
+              color: textPrimaryColor,
+              size: 20,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                item.title,
+                style: const TextStyle(
+                  color: blackColor,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: greyColor,
+              size: 20,
+            ),
+          ],
+        ),
       ),
     );
   }

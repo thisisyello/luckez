@@ -210,6 +210,23 @@ class CommunityRepository {
         );
   }
 
+  Stream<List<CommunityPost>> watchMyPosts(String userId) {
+    return _postsCollection()
+        .where('authorId', isEqualTo: userId)
+        .limit(50)
+        .snapshots()
+        .map((snapshot) {
+      final posts = snapshot.docs
+          .map((doc) => CommunityPost.fromMap(doc.id, doc.data()))
+          .where((post) => !post.isDeleted)
+          .toList();
+
+      posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return posts;
+    });
+  }
+
   Future<CommunityPost?> fetchPost(String postId) async {
     final snapshot = await _postsCollection().doc(postId).get();
 
