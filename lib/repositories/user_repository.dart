@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:luckez/models/user_profile.dart';
 
 class UserRepository {
   UserRepository({FirebaseFirestore? firestore})
@@ -7,12 +8,9 @@ class UserRepository {
 
   final FirebaseFirestore _firestore;
 
-  Stream<String> watchUserRole(String userId) {
+  Stream<UserProfile> watchUserProfile(String userId) {
     return _usersCollection().doc(userId).snapshots().map((snapshot) {
-      final data = snapshot.data();
-      final role = data == null ? null : data['role'];
-
-      return role is String ? role : 'user';
+      return UserProfile.fromMap(userId, snapshot.data());
     });
   }
 
@@ -39,9 +37,17 @@ class UserRepository {
       'uid': user.uid,
       'email': user.email,
       'displayName': user.displayName,
-      'photoUrl': user.photoURL,
       'updatedAt': now,
     };
+
+    final authPhotoUrl = user.photoURL?.trim();
+    final storedPhotoUrl = data['photoUrl'] as String?;
+
+    if (authPhotoUrl != null &&
+        authPhotoUrl.isNotEmpty &&
+        (storedPhotoUrl == null || storedPhotoUrl.trim().isEmpty)) {
+      updateData['photoUrl'] = authPhotoUrl;
+    }
 
     if (!data.containsKey('role')) {
       updateData['role'] = 'user';
@@ -56,6 +62,16 @@ class UserRepository {
   }) {
     return _usersCollection().doc(userId).set({
       'displayName': displayName,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> updatePhotoUrl({
+    required String userId,
+    required String? photoUrl,
+  }) {
+    return _usersCollection().doc(userId).set({
+      'photoUrl': photoUrl,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

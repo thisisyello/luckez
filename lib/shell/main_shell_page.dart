@@ -6,6 +6,7 @@ import 'package:luckez/constants/lotto_round.dart';
 import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
+import 'package:luckez/models/user_profile.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
 import 'package:luckez/repositories/user_repository.dart';
 import 'package:luckez/repositories/winning_round_repository.dart';
@@ -38,7 +39,7 @@ class _MainShellPageState extends State<MainShellPage> {
   StreamSubscription<User?>? authSubscription;
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
   StreamSubscription<List<LottoWinningRound>>? winningRoundsSubscription;
-  StreamSubscription<String>? userRoleSubscription;
+  StreamSubscription<UserProfile>? userProfileSubscription;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
     latestDrawRound: initialLatestDrawRound,
@@ -48,6 +49,7 @@ class _MainShellPageState extends State<MainShellPage> {
   bool isWinningRoundsLoading = true;
   bool hasWinningRoundsError = false;
   String currentUserRole = 'user';
+  UserProfile? currentUserProfile;
   User? currentUser;
 
   @override
@@ -105,19 +107,20 @@ class _MainShellPageState extends State<MainShellPage> {
         if (user == null) {
           savedNumbers.clear();
           currentUserRole = 'user';
+          currentUserProfile = null;
         }
       });
 
       if (user == null) {
         savedNumbersSubscription?.cancel();
         savedNumbersSubscription = null;
-        userRoleSubscription?.cancel();
-        userRoleSubscription = null;
+        userProfileSubscription?.cancel();
+        userProfileSubscription = null;
         return;
       }
 
       _ensureUserProfile(user);
-      _listenUserRole(user.uid);
+      _listenUserProfile(user.uid);
       _listenSavedNumbers(user.uid);
     });
   }
@@ -127,7 +130,7 @@ class _MainShellPageState extends State<MainShellPage> {
     authSubscription?.cancel();
     savedNumbersSubscription?.cancel();
     winningRoundsSubscription?.cancel();
-    userRoleSubscription?.cancel();
+    userProfileSubscription?.cancel();
     super.dispose();
   }
 
@@ -143,16 +146,17 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  void _listenUserRole(String userId) {
-    userRoleSubscription?.cancel();
-    userRoleSubscription = _userRepository.watchUserRole(userId).listen(
-      (role) {
+  void _listenUserProfile(String userId) {
+    userProfileSubscription?.cancel();
+    userProfileSubscription = _userRepository.watchUserProfile(userId).listen(
+      (profile) {
         if (!mounted) {
           return;
         }
 
         setState(() {
-          currentUserRole = role;
+          currentUserProfile = profile;
+          currentUserRole = profile.role;
         });
       },
       onError: (_) {
@@ -161,6 +165,7 @@ class _MainShellPageState extends State<MainShellPage> {
         }
 
         setState(() {
+          currentUserProfile = null;
           currentUserRole = 'user';
         });
       },
@@ -492,7 +497,7 @@ class _MainShellPageState extends State<MainShellPage> {
       scrolledUnderElevation: 0,
       surfaceTintColor: Colors.transparent,
       leading: IconButton(
-        icon: _ProfileIcon(photoUrl: currentUser?.photoURL),
+        icon: _ProfileIcon(photoUrl: _currentUserPhotoUrl),
         color: textPrimaryColor,
         tooltip: '계정',
         onPressed: _openAccountPage,
@@ -527,19 +532,39 @@ class _MainShellPageState extends State<MainShellPage> {
       return null;
     }
 
+    final profileDisplayName = currentUserProfile?.displayName;
+
+    if (profileDisplayName != null && profileDisplayName.trim().isNotEmpty) {
+      return profileDisplayName.trim();
+    }
+
     final displayName = user.displayName;
 
     if (displayName != null && displayName.trim().isNotEmpty) {
       return displayName.trim();
     }
 
-    final email = user.email;
+    final email = _currentUserEmail;
 
     if (email != null && email.trim().isNotEmpty) {
       return email.trim();
     }
 
     return '익명';
+  }
+
+  String? get _currentUserEmail {
+    return currentUserProfile?.email ?? currentUser?.email;
+  }
+
+  String? get _currentUserPhotoUrl {
+    final profilePhotoUrl = currentUserProfile?.photoUrl;
+
+    if (profilePhotoUrl != null && profilePhotoUrl.trim().isNotEmpty) {
+      return profilePhotoUrl.trim();
+    }
+
+    return currentUser?.photoURL;
   }
 
   bool get _isAdmin {
@@ -560,8 +585,8 @@ class _MainShellPageState extends State<MainShellPage> {
           savedNumbers: List<SavedLottoNumber>.unmodifiable(savedNumbers),
           currentUserId: currentUserId,
           currentUserName: _currentUserName,
-          currentUserEmail: currentUser?.email,
-          currentUserPhotoUrl: currentUser?.photoURL,
+          currentUserEmail: _currentUserEmail,
+          currentUserPhotoUrl: _currentUserPhotoUrl,
           isAdmin: _isAdmin,
           onGooglePressed: _signInWithGoogle,
           onEmailLoginPressed: _signInWithEmail,
@@ -598,6 +623,9 @@ class _MainShellPageState extends State<MainShellPage> {
 
     setState(() {
       currentUser = _authService.currentUser;
+      currentUserProfile = currentUserProfile?.copyWith(
+        displayName: displayName,
+      );
     });
   }
 
