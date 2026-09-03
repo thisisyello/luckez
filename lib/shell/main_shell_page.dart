@@ -7,6 +7,7 @@ import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/models/user_profile.dart';
+import 'package:luckez/repositories/notification_repository.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
 import 'package:luckez/repositories/user_repository.dart';
 import 'package:luckez/repositories/winning_round_repository.dart';
@@ -16,6 +17,7 @@ import 'package:luckez/pages/account_page.dart';
 import 'package:luckez/pages/community_page.dart';
 import 'package:luckez/pages/lotto_draw_page.dart';
 import 'package:luckez/pages/my_numbers_page.dart';
+import 'package:luckez/pages/notification_page.dart';
 import 'package:luckez/pages/purchase_page.dart';
 import 'package:luckez/pages/stats_page.dart';
 import 'package:luckez/theme/app_colors.dart';
@@ -30,6 +32,7 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   static final _authService = AuthService();
   static final _savedNumberRepository = SavedLottoNumberRepository();
+  static final _notificationRepository = NotificationRepository();
   static final _userRepository = UserRepository();
   static final _winningRoundRepository = WinningRoundRepository();
   static const _resultChecker = LottoResultChecker();
@@ -40,6 +43,7 @@ class _MainShellPageState extends State<MainShellPage> {
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
   StreamSubscription<List<LottoWinningRound>>? winningRoundsSubscription;
   StreamSubscription<UserProfile>? userProfileSubscription;
+  StreamSubscription<int>? unreadNotificationsSubscription;
   LottoRoundInfo roundInfo = const LottoRoundInfo(
     activeRound: initialActiveRound,
     latestDrawRound: initialLatestDrawRound,
@@ -49,6 +53,7 @@ class _MainShellPageState extends State<MainShellPage> {
   bool isWinningRoundsLoading = true;
   bool hasWinningRoundsError = false;
   String currentUserRole = 'user';
+  int unreadNotificationsCount = 0;
   UserProfile? currentUserProfile;
   User? currentUser;
 
@@ -108,6 +113,7 @@ class _MainShellPageState extends State<MainShellPage> {
           savedNumbers.clear();
           currentUserRole = 'user';
           currentUserProfile = null;
+          unreadNotificationsCount = 0;
         }
       });
 
@@ -116,12 +122,15 @@ class _MainShellPageState extends State<MainShellPage> {
         savedNumbersSubscription = null;
         userProfileSubscription?.cancel();
         userProfileSubscription = null;
+        unreadNotificationsSubscription?.cancel();
+        unreadNotificationsSubscription = null;
         return;
       }
 
       _ensureUserProfile(user);
       _listenUserProfile(user.uid);
       _listenSavedNumbers(user.uid);
+      _listenUnreadNotifications(user.uid);
     });
   }
 
@@ -131,6 +140,7 @@ class _MainShellPageState extends State<MainShellPage> {
     savedNumbersSubscription?.cancel();
     winningRoundsSubscription?.cancel();
     userProfileSubscription?.cancel();
+    unreadNotificationsSubscription?.cancel();
     super.dispose();
   }
 
@@ -167,6 +177,31 @@ class _MainShellPageState extends State<MainShellPage> {
         setState(() {
           currentUserProfile = null;
           currentUserRole = 'user';
+        });
+      },
+    );
+  }
+
+  void _listenUnreadNotifications(String userId) {
+    unreadNotificationsSubscription?.cancel();
+    unreadNotificationsSubscription =
+        _notificationRepository.watchUnreadCount(userId).listen(
+      (count) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          unreadNotificationsCount = count;
+        });
+      },
+      onError: (_) {
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          unreadNotificationsCount = 0;
         });
       },
     );
@@ -504,13 +539,10 @@ class _MainShellPageState extends State<MainShellPage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(
-            Icons.notifications_none,
-            size: 22,
-          ),
+          icon: _NotificationIcon(unreadCount: unreadNotificationsCount),
           color: textPrimaryColor,
           tooltip: '알림',
-          onPressed: () => _showComingSoonMessage('알림 기능 준비 중'),
+          onPressed: _openNotificationPage,
         ),
         const SizedBox(width: 8),
       ],
@@ -573,6 +605,25 @@ class _MainShellPageState extends State<MainShellPage> {
 
   bool _isWinningRoundRegistered(int round) {
     return _findWinningRound(round) != null;
+  }
+
+  void _openNotificationPage() {
+    final userId = currentUserId;
+
+    if (userId == null) {
+      _showComingSoonMessage('알림은 로그인이 필요해요');
+      _openAccountPage();
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => NotificationPage(
+          userId: userId,
+          notificationRepository: _notificationRepository,
+        ),
+      ),
+    );
   }
 
   void _openAccountPage() {
@@ -834,6 +885,61 @@ class _MainShellPageState extends State<MainShellPage> {
       SnackBar(
         content: Text(message),
         duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+}
+
+class _NotificationIcon extends StatelessWidget {
+  const _NotificationIcon({required this.unreadCount});
+
+  final int unreadCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUnread = unreadCount > 0;
+    final label = unreadCount > 99 ? '99+' : unreadCount.toString();
+
+    return SizedBox(
+      width: 28,
+      height: 28,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          const Center(
+            child: Icon(
+              Icons.notifications_none,
+              size: 22,
+            ),
+          ),
+          if (hasUnread)
+            Positioned(
+              right: -2,
+              top: -2,
+              child: Container(
+                constraints: const BoxConstraints(
+                  minWidth: 16,
+                  minHeight: 16,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: mainColor,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: surfaceColor, width: 1.5),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: whiteColor,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
