@@ -191,6 +191,20 @@ service cloud.firestore {
             && request.resource.data.deletedAt != null);
         allow delete: if false;
       }
+
+
+      // 앱 내부 알림: 본인은 조회/읽음 처리, 생성은 관리자 작업만 허용
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        allow create: if isAdmin()
+          && request.resource.data.isRead == false
+          && request.resource.data.readAt == null;
+        allow update: if isOwner(userId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt'])
+          && request.resource.data.isRead == true
+          && request.resource.data.readAt != null;
+        allow delete: if false;
+      }
     }
 
     // 위에서 허용하지 않은 모든 접근은 차단
