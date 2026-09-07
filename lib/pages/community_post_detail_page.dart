@@ -134,7 +134,6 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
                           isLoggedIn: widget.currentUserId != null,
                           isSubmitting: _isSubmittingComment,
                           onLoginRequired: widget.onLoginRequired,
-                          onChanged: (_) => setState(() {}),
                           onSubmit: _submitComment,
                         ),
                         const SizedBox(height: 14),
@@ -792,13 +791,12 @@ class _CommentSectionShell extends StatelessWidget {
   }
 }
 
-class _CommentInput extends StatelessWidget {
+class _CommentInput extends StatefulWidget {
   const _CommentInput({
     required this.controller,
     required this.isLoggedIn,
     required this.isSubmitting,
     required this.onLoginRequired,
-    required this.onChanged,
     required this.onSubmit,
   });
 
@@ -806,30 +804,66 @@ class _CommentInput extends StatelessWidget {
   final bool isLoggedIn;
   final bool isSubmitting;
   final VoidCallback onLoginRequired;
-  final ValueChanged<String> onChanged;
   final VoidCallback onSubmit;
 
   @override
+  State<_CommentInput> createState() => _CommentInputState();
+}
+
+class _CommentInputState extends State<_CommentInput> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_handleTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(_CommentInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.controller == widget.controller) {
+      return;
+    }
+
+    oldWidget.controller.removeListener(_handleTextChanged);
+    widget.controller.addListener(_handleTextChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_handleTextChanged);
+    super.dispose();
+  }
+
+  void _handleTextChanged() {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (!isLoggedIn) {
+    if (!widget.isLoggedIn) {
       return AppButton.secondary(
         label: '로그인하고 댓글 쓰기',
-        onPressed: onLoginRequired,
+        onPressed: widget.onLoginRequired,
         height: 46,
       );
     }
 
-    final canSubmit = controller.text.trim().isNotEmpty && !isSubmitting;
+    final canSubmit =
+        widget.controller.text.trim().isNotEmpty && !widget.isSubmitting;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: TextField(
-            controller: controller,
+            controller: widget.controller,
             minLines: 1,
             maxLines: 3,
-            onChanged: onChanged,
             decoration: InputDecoration(
               hintText: '댓글을 입력하세요',
               hintStyle: const TextStyle(
@@ -855,8 +889,8 @@ class _CommentInput extends StatelessWidget {
           height: 46,
           child: AppButton.primary(
             label: '등록',
-            onPressed: canSubmit ? onSubmit : null,
-            isLoading: isSubmitting,
+            onPressed: canSubmit ? widget.onSubmit : null,
+            isLoading: widget.isSubmitting,
             height: 46,
           ),
         ),
