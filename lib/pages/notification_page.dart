@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/models/app_notification.dart';
+import 'package:luckez/pages/community_post_detail_page.dart';
+import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/repositories/notification_repository.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
@@ -9,11 +11,19 @@ class NotificationPage extends StatelessWidget {
   const NotificationPage({
     super.key,
     required this.userId,
+    required this.currentUserName,
+    required this.isAdmin,
     required this.notificationRepository,
+    required this.communityRepository,
+    required this.onLoginRequired,
   });
 
   final String userId;
+  final String? currentUserName;
+  final bool isAdmin;
   final NotificationRepository notificationRepository;
+  final CommunityRepository communityRepository;
+  final VoidCallback onLoginRequired;
 
   @override
   Widget build(BuildContext context) {
@@ -120,12 +130,66 @@ class NotificationPage extends StatelessWidget {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('연결 화면은 준비 중이에요'),
-        duration: Duration(seconds: 1),
-      ),
-    );
+    await _openNotificationTarget(context, notification);
+  }
+
+  Future<void> _openNotificationTarget(
+    BuildContext context,
+    AppNotification notification,
+  ) async {
+    if (notification.targetType != AppNotificationTargetType.communityPost ||
+        notification.targetId == null ||
+        notification.targetId!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('연결 화면은 준비 중이에요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final post = await communityRepository.fetchPost(notification.targetId!);
+
+      if (!context.mounted) {
+        return;
+      }
+
+      if (post == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('게시글을 찾을 수 없어요'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+        return;
+      }
+
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => CommunityPostDetailPage(
+            post: post,
+            currentUserId: userId,
+            currentUserName: currentUserName,
+            isAdmin: isAdmin,
+            onLoginRequired: onLoginRequired,
+            communityRepository: communityRepository,
+          ),
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('게시글을 불러오지 못했어요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 
   Future<void> _markAllAsRead(BuildContext context) async {

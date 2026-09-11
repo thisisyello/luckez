@@ -7,6 +7,7 @@ import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/models/user_profile.dart';
+import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/repositories/notification_repository.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
 import 'package:luckez/repositories/user_repository.dart';
@@ -32,6 +33,7 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   static final _authService = AuthService();
   static final _savedNumberRepository = SavedLottoNumberRepository();
+  static final _communityRepository = CommunityRepository();
   static final _notificationRepository = NotificationRepository();
   static final _userRepository = UserRepository();
   static final _winningRoundRepository = WinningRoundRepository();
@@ -620,7 +622,14 @@ class _MainShellPageState extends State<MainShellPage> {
       MaterialPageRoute(
         builder: (_) => NotificationPage(
           userId: userId,
+          currentUserName: _currentUserName,
+          isAdmin: _isAdmin,
           notificationRepository: _notificationRepository,
+          communityRepository: _communityRepository,
+          onLoginRequired: () {
+            _showComingSoonMessage('로그인이 필요해요');
+            _openAccountPage();
+          },
         ),
       ),
     );
