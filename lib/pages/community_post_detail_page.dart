@@ -190,6 +190,7 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
       await widget.communityRepository.togglePostLike(
         postId: _post.id,
         userId: userId,
+        userName: widget.currentUserName ?? '익명',
       );
     } catch (_) {
       if (!mounted) {

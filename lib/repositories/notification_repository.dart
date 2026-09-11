@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:luckez/models/app_notification.dart';
 
 class NotificationRepository {
+  static const _commentMessageMaxLength = 40;
+
   NotificationRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -52,6 +54,93 @@ class NotificationRepository {
     });
   }
 
+  String postCommentNotificationId({
+    required String postId,
+    required String commentId,
+  }) {
+    return 'comment_${postId}_$commentId';
+  }
+
+  String postLikeNotificationId({
+    required String postId,
+    required String likerUserId,
+  }) {
+    return 'like_${postId}_$likerUserId';
+  }
+
+  DocumentReference<Map<String, dynamic>> notificationDocument({
+    required String userId,
+    required String notificationId,
+  }) {
+    return _notificationsCollection(userId).doc(notificationId);
+  }
+
+  void setPostCommentNotificationInTransaction({
+    required Transaction transaction,
+    required String postAuthorId,
+    required String postId,
+    required String commentId,
+    required String commentAuthorId,
+    required String commentAuthorName,
+    required String commentContent,
+  }) {
+    if (postAuthorId == commentAuthorId) {
+      return;
+    }
+
+    final notificationId = postCommentNotificationId(
+      postId: postId,
+      commentId: commentId,
+    );
+
+    transaction.set(
+      notificationDocument(
+        userId: postAuthorId,
+        notificationId: notificationId,
+      ),
+      _communityNotificationData(
+        type: AppNotificationType.postComment,
+        title: '내 글에 댓글이 달렸어요',
+        message: '$commentAuthorName: ${_shorten(commentContent)}',
+        targetId: postId,
+        actorId: commentAuthorId,
+        actorName: commentAuthorName,
+      ),
+    );
+  }
+
+  void setPostLikeNotificationInTransaction({
+    required Transaction transaction,
+    required String postAuthorId,
+    required String postId,
+    required String likerUserId,
+    required String likerName,
+  }) {
+    if (postAuthorId == likerUserId) {
+      return;
+    }
+
+    final notificationId = postLikeNotificationId(
+      postId: postId,
+      likerUserId: likerUserId,
+    );
+
+    transaction.set(
+      notificationDocument(
+        userId: postAuthorId,
+        notificationId: notificationId,
+      ),
+      _communityNotificationData(
+        type: AppNotificationType.postLike,
+        title: '내 글에 좋아요가 눌렸어요',
+        message: '$likerName님이 내 글을 좋아해요',
+        targetId: postId,
+        actorId: likerUserId,
+        actorName: likerName,
+      ),
+    );
+  }
+
   Future<void> markAsRead({
     required String userId,
     required String notificationId,
@@ -82,6 +171,39 @@ class NotificationRepository {
     }
 
     await batch.commit();
+  }
+
+  Map<String, dynamic> _communityNotificationData({
+    required AppNotificationType type,
+    required String title,
+    required String message,
+    required String targetId,
+    required String actorId,
+    required String actorName,
+  }) {
+    return {
+      'type': type.value,
+      'title': title,
+      'message': message,
+      'targetType': AppNotificationTargetType.communityPost,
+      'targetId': targetId,
+      'round': null,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+      'readAt': null,
+      'actorId': actorId,
+      'actorName': actorName,
+    };
+  }
+
+  String _shorten(String value) {
+    final trimmed = value.trim();
+
+    if (trimmed.length <= _commentMessageMaxLength) {
+      return trimmed;
+    }
+
+    return '${trimmed.substring(0, _commentMessageMaxLength)}...';
   }
 
   CollectionReference<Map<String, dynamic>> _notificationsCollection(

@@ -107,6 +107,51 @@ service cloud.firestore {
         && request.resource.data.resolvedAt == null;
     }
 
+
+    // MVP용 커뮤니티 알림 생성 검증: 추후 Cloud Functions 전환 시 차단 예정
+    function isValidCommunityNotification(userId) {
+      return isSignedIn()
+        && userId != request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'type',
+          'title',
+          'message',
+          'targetType',
+          'targetId',
+          'round',
+          'isRead',
+          'createdAt',
+          'readAt',
+          'actorId',
+          'actorName'
+        ])
+        && request.resource.data.type in ['post_comment', 'post_like']
+        && request.resource.data.title is string
+        && request.resource.data.message is string
+        && request.resource.data.targetType == 'communityPost'
+        && request.resource.data.targetId is string
+        && request.resource.data.round == null
+        && request.resource.data.isRead == false
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.readAt == null
+        && request.resource.data.actorId == request.auth.uid
+        && request.resource.data.actorName is string;
+    }
+
+    function isMarkingNotificationRead() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt'])
+        && request.resource.data.isRead == true
+        && request.resource.data.readAt != null;
+    }
+
+    function isUpdatingOwnCommunityNotification(userId) {
+      return isValidCommunityNotification(userId)
+        && resource.data.actorId == request.auth.uid
+        && resource.data.type == request.resource.data.type
+        && resource.data.targetType == request.resource.data.targetType
+        && resource.data.targetId == request.resource.data.targetId;
+    }
+
     // 당첨번호는 누구나 읽고, 등록/수정은 관리자만 허용
     match /lottoWinningRounds/{roundId} {
       allow read: if true;
@@ -193,16 +238,15 @@ service cloud.firestore {
       }
 
 
-      // 앱 내부 알림: 본인은 조회/읽음 처리, 생성은 관리자 작업만 허용
+      // 앱 내부 알림: 본인은 조회/읽음 처리, 댓글/좋아요 알림은 MVP용 클라이언트 생성 허용
       match /notifications/{notificationId} {
         allow read: if isOwner(userId);
-        allow create: if isAdmin()
-          && request.resource.data.isRead == false
-          && request.resource.data.readAt == null;
-        allow update: if isOwner(userId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt'])
-          && request.resource.data.isRead == true
-          && request.resource.data.readAt != null;
+        allow create: if (isAdmin()
+            && request.resource.data.isRead == false
+            && request.resource.data.readAt == null)
+          || isValidCommunityNotification(userId);
+        allow update: if (isOwner(userId) && isMarkingNotificationRead())
+          || isUpdatingOwnCommunityNotification(userId);
         allow delete: if false;
       }
     }

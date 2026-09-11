@@ -3,12 +3,18 @@ import 'package:luckez/models/community_comment.dart';
 import 'package:luckez/models/community_liked_post.dart';
 import 'package:luckez/models/community_my_comment.dart';
 import 'package:luckez/models/community_post.dart';
+import 'package:luckez/repositories/notification_repository.dart';
 
 class CommunityRepository {
-  CommunityRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  CommunityRepository({
+    FirebaseFirestore? firestore,
+    NotificationRepository? notificationRepository,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _notificationRepository =
+            notificationRepository ?? NotificationRepository();
 
   final FirebaseFirestore _firestore;
+  final NotificationRepository _notificationRepository;
 
   Future<void> createPost({
     required String title,
@@ -95,6 +101,15 @@ class CommunityRepository {
         'commentCount': FieldValue.increment(1),
         'updatedAt': now,
       });
+      _notificationRepository.setPostCommentNotificationInTransaction(
+        transaction: transaction,
+        postAuthorId: post.authorId,
+        postId: post.id,
+        commentId: commentRef.id,
+        commentAuthorId: authorId,
+        commentAuthorName: authorName,
+        commentContent: content,
+      );
     });
   }
 
@@ -169,6 +184,7 @@ class CommunityRepository {
   Future<void> togglePostLike({
     required String postId,
     required String userId,
+    required String userName,
   }) async {
     final postRef = _postsCollection().doc(postId);
     final likeRef = _likesCollection(postId).doc(userId);
@@ -182,6 +198,12 @@ class CommunityRepository {
         throw StateError('Post does not exist.');
       }
 
+      final post = CommunityPost.fromMap(postSnapshot.id, postSnapshot.data()!);
+
+      if (post.isDeleted) {
+        throw StateError('Post has been deleted.');
+      }
+
       if (likeSnapshot.exists) {
         transaction.delete(likeRef);
         transaction.delete(likedPostRef);
@@ -192,7 +214,6 @@ class CommunityRepository {
         return;
       }
 
-      final post = CommunityPost.fromMap(postSnapshot.id, postSnapshot.data()!);
       final now = FieldValue.serverTimestamp();
 
       transaction.set(likeRef, {
@@ -210,6 +231,13 @@ class CommunityRepository {
         'likeCount': FieldValue.increment(1),
         'updatedAt': now,
       });
+      _notificationRepository.setPostLikeNotificationInTransaction(
+        transaction: transaction,
+        postAuthorId: post.authorId,
+        postId: post.id,
+        likerUserId: userId,
+        likerName: userName,
+      );
     });
   }
 

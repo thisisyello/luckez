@@ -267,6 +267,7 @@ class _CommunityPostCard extends StatelessWidget {
     await communityRepository.togglePostLike(
       postId: post.id,
       userId: userId,
+      userName: currentUserName ?? '익명',
     );
   }
 }
