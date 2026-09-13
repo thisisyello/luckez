@@ -630,9 +630,18 @@ class _MainShellPageState extends State<MainShellPage> {
             _showComingSoonMessage('로그인이 필요해요');
             _openAccountPage();
           },
+          onSavedNumberNotificationPressed: _openMyNumbersTabFromNotification,
         ),
       ),
     );
+  }
+
+  void _openMyNumbersTabFromNotification() {
+    Navigator.of(context).maybePop();
+
+    setState(() {
+      selectedIndex = 3;
+    });
   }
 
   void _openAccountPage() {
@@ -847,9 +856,9 @@ class _MainShellPageState extends State<MainShellPage> {
     LottoWinningRound winningRound,
   ) async {
     final checkedAt = DateTime.now();
-    final targetSavedNumbers = savedNumbers.where(
-      (savedNumber) => savedNumber.round == winningRound.round,
-    );
+    final targetSavedNumbers = savedNumbers
+        .where((savedNumber) => savedNumber.round == winningRound.round)
+        .toList();
 
     for (final savedNumber in targetSavedNumbers) {
       final result = _resultChecker.check(
@@ -866,6 +875,16 @@ class _MainShellPageState extends State<MainShellPage> {
 
       await _savedNumberRepository.update(userId, updatedSavedNumber);
     }
+
+    if (targetSavedNumbers.isEmpty) {
+      return;
+    }
+
+    await _notificationRepository.createWinningResultNotification(
+      userId: userId,
+      round: winningRound.round,
+      savedNumbersCount: targetSavedNumbers.length,
+    );
   }
 
   String _authErrorMessage(FirebaseAuthException error) {

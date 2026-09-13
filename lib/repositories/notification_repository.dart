@@ -141,6 +141,26 @@ class NotificationRepository {
     );
   }
 
+  String winningResultNotificationId(int round) {
+    return 'winning_result_$round';
+  }
+
+  Future<void> createWinningResultNotification({
+    required String userId,
+    required int round,
+    required int savedNumbersCount,
+  }) {
+    return create(
+      userId: userId,
+      notificationId: winningResultNotificationId(round),
+      type: AppNotificationType.winningResult,
+      title: '$round회 당첨 결과가 확인됐어요',
+      message: '저장한 번호 $savedNumbersCount개의 결과를 확인해보세요.',
+      targetType: AppNotificationTargetType.savedNumber,
+      round: round,
+    );
+  }
+
   Future<void> markAsRead({
     required String userId,
     required String notificationId,

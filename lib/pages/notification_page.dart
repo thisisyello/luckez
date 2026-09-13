@@ -16,6 +16,7 @@ class NotificationPage extends StatelessWidget {
     required this.notificationRepository,
     required this.communityRepository,
     required this.onLoginRequired,
+    required this.onSavedNumberNotificationPressed,
   });
 
   final String userId;
@@ -24,6 +25,7 @@ class NotificationPage extends StatelessWidget {
   final NotificationRepository notificationRepository;
   final CommunityRepository communityRepository;
   final VoidCallback onLoginRequired;
+  final VoidCallback onSavedNumberNotificationPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +139,11 @@ class NotificationPage extends StatelessWidget {
     BuildContext context,
     AppNotification notification,
   ) async {
+    if (notification.targetType == AppNotificationTargetType.savedNumber) {
+      onSavedNumberNotificationPressed();
+      return;
+    }
+
     if (notification.targetType != AppNotificationTargetType.communityPost ||
         notification.targetId == null ||
         notification.targetId!.isEmpty) {

@@ -245,7 +245,10 @@ service cloud.firestore {
             && request.resource.data.isRead == false
             && request.resource.data.readAt == null)
           || isValidCommunityNotification(userId);
-        allow update: if (isOwner(userId) && isMarkingNotificationRead())
+        allow update: if (isAdmin()
+            && request.resource.data.isRead == false
+            && request.resource.data.readAt == null)
+          || (isOwner(userId) && isMarkingNotificationRead())
           || isUpdatingOwnCommunityNotification(userId);
         allow delete: if false;
       }
