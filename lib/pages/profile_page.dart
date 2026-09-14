@@ -132,38 +132,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<void> _openNameEditDialog(String currentName) async {
-    final controller = TextEditingController(text: currentName);
-
     final updatedName = await showDialog<String>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('이름 수정'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: '이름',
-              hintText: '표시할 이름을 입력하세요',
-            ),
-            onSubmitted: (value) => Navigator.pop(context, value.trim()),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: const Text('저장'),
-            ),
-          ],
-        );
-      },
+      builder: (_) => _NameEditDialog(initialName: currentName),
     );
-
-    controller.dispose();
 
     final trimmedName = updatedName?.trim();
 
@@ -217,6 +189,58 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return trimmed;
+  }
+}
+
+class _NameEditDialog extends StatefulWidget {
+  const _NameEditDialog({required this.initialName});
+
+  final String initialName;
+
+  @override
+  State<_NameEditDialog> createState() => _NameEditDialogState();
+}
+
+class _NameEditDialogState extends State<_NameEditDialog> {
+  late final TextEditingController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController(text: widget.initialName);
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('이름 수정'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        textInputAction: TextInputAction.done,
+        decoration: const InputDecoration(
+          labelText: '이름',
+          hintText: '표시할 이름을 입력하세요',
+        ),
+        onSubmitted: (value) => Navigator.pop(context, value.trim()),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          child: const Text('저장'),
+        ),
+      ],
+    );
   }
 }
 

@@ -235,73 +235,12 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
       return;
     }
 
-    final descriptionController = TextEditingController();
-    var selectedReason = CommunityReportReason.spam;
-
-    final shouldReport = await showDialog<bool>(
+    final report = await showDialog<_ReportDialogResult>(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('신고할까요?'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<CommunityReportReason>(
-                    initialValue: selectedReason,
-                    decoration: const InputDecoration(
-                      labelText: '신고 사유',
-                    ),
-                    items: CommunityReportReason.values
-                        .map(
-                          (reason) => DropdownMenuItem(
-                            value: reason,
-                            child: Text(reason.label),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (reason) {
-                      if (reason == null) {
-                        return;
-                      }
-
-                      setDialogState(() {
-                        selectedReason = reason;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: descriptionController,
-                    minLines: 2,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: '추가 설명',
-                      hintText: '선택 입력',
-                      alignLabelWithHint: true,
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('취소'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('신고'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => const _ReportDialog(),
     );
 
-    if (shouldReport != true || !mounted) {
-      descriptionController.dispose();
+    if (report == null || !mounted) {
       return;
     }
 
@@ -311,12 +250,10 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
         targetId: targetId,
         postId: postId,
         reporterId: widget.currentUserId!,
-        reason: selectedReason.value,
-        description: descriptionController.text,
+        reason: report.reason.value,
+        description: report.description,
       );
     } catch (_) {
-      descriptionController.dispose();
-
       if (!mounted) {
         return;
       }
@@ -329,8 +266,6 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
       );
       return;
     }
-
-    descriptionController.dispose();
 
     if (!mounted) {
       return;
@@ -386,39 +321,10 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
       return;
     }
 
-    final controller = TextEditingController(text: comment.content);
-
     final updatedContent = await showDialog<String>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('댓글 수정'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            minLines: 1,
-            maxLines: 4,
-            textInputAction: TextInputAction.newline,
-            decoration: const InputDecoration(
-              hintText: '댓글을 입력하세요',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('취소'),
-            ),
-            TextButton(
-              onPressed: () =>
-                  Navigator.of(context).pop(controller.text.trim()),
-              child: const Text('수정'),
-            ),
-          ],
-        );
-      },
+      builder: (_) => _CommentEditDialog(initialContent: comment.content),
     );
-
-    controller.dispose();
 
     final content = updatedContent?.trim();
 
@@ -618,6 +524,147 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
 
   String _twoDigits(int value) {
     return value.toString().padLeft(2, '0');
+  }
+}
+
+class _ReportDialogResult {
+  const _ReportDialogResult({
+    required this.reason,
+    required this.description,
+  });
+
+  final CommunityReportReason reason;
+  final String description;
+}
+
+class _ReportDialog extends StatefulWidget {
+  const _ReportDialog();
+
+  @override
+  State<_ReportDialog> createState() => _ReportDialogState();
+}
+
+class _ReportDialogState extends State<_ReportDialog> {
+  final descriptionController = TextEditingController();
+  var selectedReason = CommunityReportReason.spam;
+
+  @override
+  void dispose() {
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('신고할까요?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<CommunityReportReason>(
+            initialValue: selectedReason,
+            decoration: const InputDecoration(
+              labelText: '신고 사유',
+            ),
+            items: CommunityReportReason.values
+                .map(
+                  (reason) => DropdownMenuItem(
+                    value: reason,
+                    child: Text(reason.label),
+                  ),
+                )
+                .toList(),
+            onChanged: (reason) {
+              if (reason == null) {
+                return;
+              }
+
+              setState(() {
+                selectedReason = reason;
+              });
+            },
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: descriptionController,
+            minLines: 2,
+            maxLines: 4,
+            decoration: const InputDecoration(
+              labelText: '추가 설명',
+              hintText: '선택 입력',
+              alignLabelWithHint: true,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(
+            _ReportDialogResult(
+              reason: selectedReason,
+              description: descriptionController.text,
+            ),
+          ),
+          child: const Text('신고'),
+        ),
+      ],
+    );
+  }
+}
+
+class _CommentEditDialog extends StatefulWidget {
+  const _CommentEditDialog({required this.initialContent});
+
+  final String initialContent;
+
+  @override
+  State<_CommentEditDialog> createState() => _CommentEditDialogState();
+}
+
+class _CommentEditDialogState extends State<_CommentEditDialog> {
+  late final TextEditingController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController(text: widget.initialContent);
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('댓글 수정'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        minLines: 1,
+        maxLines: 4,
+        textInputAction: TextInputAction.newline,
+        decoration: const InputDecoration(
+          hintText: '댓글을 입력하세요',
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('취소'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+          child: const Text('수정'),
+        ),
+      ],
+    );
   }
 }
 
