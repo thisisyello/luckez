@@ -563,6 +563,16 @@ class _ReportDialogState extends State<_ReportDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const Text(
+              '허위 신고나 남용은 서비스 이용에 제한이 있을 수 있어요.',
+              style: TextStyle(
+                color: redColor,
+                fontSize: 12,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
             DropdownButtonFormField<CommunityReportReason>(
               initialValue: selectedReason,
               isExpanded: true,
