@@ -16,9 +16,39 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // 일반 사용자가 role을 admin으로 바꾸지 못하게 제한
+    // 사용자 프로필은 정해진 필드와 기본 타입만 허용
+    function isNullableString(value) {
+      return value == null || value is string;
+    }
+
+    function isValidUserProfileFields() {
+      return request.resource.data.keys().hasOnly([
+        'uid',
+        'email',
+        'displayName',
+        'photoUrl',
+        'role',
+        'createdAt',
+        'updatedAt'
+      ])
+        && request.resource.data.uid is string
+        && isNullableString(request.resource.data.email)
+        && isNullableString(request.resource.data.displayName)
+        && isNullableString(request.resource.data.photoUrl)
+        && request.resource.data.role is string;
+    }
+
     function isDefaultUserRole() {
       return request.resource.data.role == 'user';
+    }
+
+    function isValidUserProfileCreate(userId) {
+      return isOwner(userId)
+        && isValidUserProfileFields()
+        && request.resource.data.uid == userId
+        && request.resource.data.role == 'user'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
     }
 
     function isRoleUnchanged() {
@@ -29,9 +59,46 @@ service cloud.firestore {
       return !resource.data.keys().hasAny(['role']) && isDefaultUserRole();
     }
 
+    function isUidUnchangedOrBackfill(userId) {
+      return request.resource.data.uid == resource.data.uid
+        || (!resource.data.keys().hasAny(["uid"]) && request.resource.data.uid == userId);
+    }
+
+    function isValidUserProfileUpdate(userId) {
+      return isOwner(userId)
+        && isValidUserProfileFields()
+        && isUidUnchangedOrBackfill(userId)
+        && (isRoleUnchanged() || isMissingRoleBackfill())
+        && request.resource.data.updatedAt == request.time;
+    }
+
     // 커뮤니티 글/댓글 작성자와 soft delete 검증
     function isPostAuthor() {
       return isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    function isValidPostCreate() {
+      return isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'title',
+          'content',
+          'authorId',
+          'authorName',
+          'commentCount',
+          'likeCount',
+          'createdAt',
+          'updatedAt',
+          'deletedAt'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorName is string
+        && request.resource.data.commentCount == 0
+        && request.resource.data.likeCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.deletedAt == null;
     }
 
     function isEditingPost() {
@@ -48,6 +115,24 @@ service cloud.firestore {
 
     function isCommentAuthor() {
       return isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    function isValidCommentCreate() {
+      return isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'content',
+          'authorId',
+          'authorName',
+          'createdAt',
+          'updatedAt',
+          'deletedAt'
+        ])
+        && request.resource.data.content is string
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.authorName is string
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.deletedAt == null;
     }
 
     function isEditingComment() {
@@ -162,11 +247,7 @@ service cloud.firestore {
     // 커뮤니티 게시글: 읽기는 공개, 작성은 로그인 사용자만 허용
     match /communityPosts/{postId} {
       allow read: if true;
-      allow create: if isSignedIn()
-        && request.resource.data.authorId == request.auth.uid
-        && request.resource.data.commentCount == 0
-        && request.resource.data.likeCount == 0
-        && request.resource.data.deletedAt == null;
+      allow create: if isValidPostCreate();
       allow update: if isEditingPost()
         || ((isPostAuthor() || isAdmin()) && isSoftDeletingPost())
         || isUpdatingPostCommentCount()
@@ -176,9 +257,7 @@ service cloud.firestore {
       // 댓글: 읽기는 공개, 작성은 로그인 사용자만 허용
       match /comments/{commentId} {
         allow read: if true;
-        allow create: if isSignedIn()
-          && request.resource.data.authorId == request.auth.uid
-          && request.resource.data.deletedAt == null;
+        allow create: if isValidCommentCreate();
         allow update: if isEditingComment()
           || ((isCommentAuthor() || isAdmin()) && isSoftDeletingComment());
         allow delete: if false;
@@ -204,8 +283,8 @@ service cloud.firestore {
     // 사용자 프로필과 개인 데이터는 본인만 접근
     match /users/{userId} {
       allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isDefaultUserRole();
-      allow update: if isOwner(userId) && (isRoleUnchanged() || isMissingRoleBackfill());
+      allow create: if isValidUserProfileCreate(userId);
+      allow update: if isValidUserProfileUpdate(userId);
       allow delete: if false;
 
       // 저장한 로또 번호
