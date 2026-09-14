@@ -28,13 +28,19 @@ class AuthService {
   }
 
   Future<UserCredential> signUpWithEmail({
+    required String displayName,
     required String email,
     required String password,
-  }) {
-    return _firebaseAuth.createUserWithEmailAndPassword(
+  }) async {
+    final credential = await _firebaseAuth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
+
+    await credential.user?.updateDisplayName(displayName);
+    await credential.user?.reload();
+
+    return credential;
   }
 
   Future<UserCredential> signInWithGoogle() async {

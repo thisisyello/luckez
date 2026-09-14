@@ -13,7 +13,7 @@ class SignUpPage extends StatefulWidget {
   });
 
   final VoidCallback onGooglePressed;
-  final EmailPasswordSubmitted onEmailSubmit;
+  final EmailSignUpSubmitted onEmailSubmit;
   final VoidCallback onLoginPressed;
 
   @override
@@ -21,6 +21,7 @@ class SignUpPage extends StatefulWidget {
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final nameController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final passwordConfirmController = TextEditingController();
@@ -28,6 +29,7 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     passwordConfirmController.dispose();
@@ -35,9 +37,17 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void _submit() {
+    final displayName = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text;
     final passwordConfirm = passwordConfirmController.text;
+
+    if (displayName.isEmpty) {
+      setState(() {
+        errorText = '이름을 입력해주세요';
+      });
+      return;
+    }
 
     if (password != passwordConfirm) {
       setState(() {
@@ -49,7 +59,7 @@ class _SignUpPageState extends State<SignUpPage> {
     setState(() {
       errorText = null;
     });
-    widget.onEmailSubmit(email, password);
+    widget.onEmailSubmit(displayName, email, password);
   }
 
   @override
@@ -75,6 +85,13 @@ class _SignUpPageState extends State<SignUpPage> {
                   const SizedBox(height: 16),
                   const AuthDivider(label: '이메일 가입'),
                   const SizedBox(height: 16),
+                  AuthTextField(
+                    controller: nameController,
+                    label: '이름',
+                    textInputAction: TextInputAction.done,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 10),
                   AuthTextField(
                     controller: emailController,
                     label: '이메일',

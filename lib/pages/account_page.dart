@@ -16,6 +16,11 @@ import 'package:luckez/widgets/app_button.dart';
 import 'package:luckez/widgets/app_card.dart';
 
 typedef EmailPasswordSubmitted = void Function(String email, String password);
+typedef EmailSignUpSubmitted = void Function(
+  String displayName,
+  String email,
+  String password,
+);
 typedef WinningRoundSubmitted = Future<void> Function(
   LottoWinningRound winningRound,
 );
@@ -57,7 +62,7 @@ class AccountPage extends StatelessWidget {
   final bool isAdmin;
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
-  final EmailPasswordSubmitted onEmailSignUpPressed;
+  final EmailSignUpSubmitted onEmailSignUpPressed;
   final DisplayNameSubmitted? onDisplayNameSubmit;
   final VoidCallback? onSavedNumbersPressed;
   final VoidCallback? onSignOutPressed;
@@ -142,7 +147,7 @@ class AccountPageContent extends StatefulWidget {
   final bool isAdmin;
   final VoidCallback onGooglePressed;
   final EmailPasswordSubmitted onEmailLoginPressed;
-  final EmailPasswordSubmitted onEmailSignUpPressed;
+  final EmailSignUpSubmitted onEmailSignUpPressed;
   final DisplayNameSubmitted? onDisplayNameSubmit;
   final VoidCallback? onSavedNumbersPressed;
   final VoidCallback? onSignOutPressed;

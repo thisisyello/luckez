@@ -788,17 +788,32 @@ class _MainShellPageState extends State<MainShellPage> {
     }
   }
 
-  Future<void> _signUpWithEmail(String email, String password) async {
+  Future<void> _signUpWithEmail(
+    String displayName,
+    String email,
+    String password,
+  ) async {
+    if (displayName.trim().isEmpty) {
+      _showComingSoonMessage('이름을 입력해주세요');
+      return;
+    }
+
     if (email.isEmpty || password.isEmpty) {
       _showComingSoonMessage('이메일과 비밀번호를 입력해주세요');
       return;
     }
 
     try {
-      await _authService.signUpWithEmail(
+      final credential = await _authService.signUpWithEmail(
+        displayName: displayName.trim(),
         email: email,
         password: password,
       );
+      final user = credential.user ?? _authService.currentUser;
+
+      if (user != null) {
+        await _userRepository.ensureUserProfile(user);
+      }
 
       if (!mounted) {
         return;
