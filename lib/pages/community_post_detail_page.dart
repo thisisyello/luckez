@@ -558,44 +558,51 @@ class _ReportDialogState extends State<_ReportDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('신고할까요?'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DropdownButtonFormField<CommunityReportReason>(
-            initialValue: selectedReason,
-            decoration: const InputDecoration(
-              labelText: '신고 사유',
-            ),
-            items: CommunityReportReason.values
-                .map(
-                  (reason) => DropdownMenuItem(
-                    value: reason,
-                    child: Text(reason.label),
-                  ),
-                )
-                .toList(),
-            onChanged: (reason) {
-              if (reason == null) {
-                return;
-              }
+      content: SizedBox(
+        width: 320,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<CommunityReportReason>(
+              initialValue: selectedReason,
+              isExpanded: true,
+              decoration: const InputDecoration(
+                labelText: '신고 사유',
+              ),
+              items: CommunityReportReason.values
+                  .map(
+                    (reason) => DropdownMenuItem(
+                      value: reason,
+                      child: Text(
+                        reason.label,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (reason) {
+                if (reason == null) {
+                  return;
+                }
 
-              setState(() {
-                selectedReason = reason;
-              });
-            },
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: descriptionController,
-            minLines: 2,
-            maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: '추가 설명',
-              hintText: '선택 입력',
-              alignLabelWithHint: true,
+                setState(() {
+                  selectedReason = reason;
+                });
+              },
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            TextField(
+              controller: descriptionController,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: '추가 설명',
+                hintText: '선택 입력',
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
