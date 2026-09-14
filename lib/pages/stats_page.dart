@@ -49,6 +49,7 @@ class _StatsPageState extends State<StatsPage> {
       color: const Color(0xffF7F7F8),
       child: SafeArea(
         top: false,
+        bottom: false,
         child: PageContentWidth(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,

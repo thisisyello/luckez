@@ -43,6 +43,7 @@ class AccountPage extends StatelessWidget {
     this.onWinningRoundSubmit,
     this.initialWinningRound,
     this.isWinningRoundRegistered,
+    this.useBottomSafeArea = true,
   });
 
   final bool isLoggedIn;
@@ -63,6 +64,7 @@ class AccountPage extends StatelessWidget {
   final WinningRoundSubmitted? onWinningRoundSubmit;
   final int? initialWinningRound;
   final WinningRoundRegisteredCheck? isWinningRoundRegistered;
+  final bool useBottomSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +128,7 @@ class AccountPageContent extends StatefulWidget {
     this.onWinningRoundSubmit,
     this.initialWinningRound,
     this.isWinningRoundRegistered,
+    this.useBottomSafeArea = true,
   });
 
   final bool isLoggedIn;
@@ -146,6 +149,7 @@ class AccountPageContent extends StatefulWidget {
   final WinningRoundSubmitted? onWinningRoundSubmit;
   final int? initialWinningRound;
   final WinningRoundRegisteredCheck? isWinningRoundRegistered;
+  final bool useBottomSafeArea;
 
   @override
   State<AccountPageContent> createState() => _AccountPageContentState();
@@ -174,6 +178,7 @@ class _AccountPageContentState extends State<AccountPageContent> {
   Widget build(BuildContext context) {
     return SafeArea(
       top: false,
+      bottom: widget.useBottomSafeArea,
       child: PageContentWidth(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),

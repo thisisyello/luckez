@@ -445,6 +445,7 @@ class _MainShellPageState extends State<MainShellPage> {
                   onGooglePressed: _signInWithGoogle,
                   onEmailLoginPressed: _signInWithEmail,
                   onEmailSignUpPressed: _signUpWithEmail,
+                  useBottomSafeArea: false,
                 )
               : MyNumbersPage(
                   savedNumbers: savedNumbers,
@@ -470,13 +471,15 @@ class _MainShellPageState extends State<MainShellPage> {
         child: Container(
           height: 68,
           decoration: BoxDecoration(
-            color: surfaceColor,
+            color: surfaceColor.withValues(alpha: 0.88),
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: borderColor),
+            border: Border.all(
+              color: borderColor.withValues(alpha: 0.72),
+            ),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x18000000),
-                blurRadius: 18,
+                color: Color(0x14000000),
+                blurRadius: 20,
                 offset: Offset(0, 8),
               ),
             ],

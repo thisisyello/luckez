@@ -63,6 +63,7 @@ class _MyNumbersPageState extends State<MyNumbersPage> {
       color: const Color(0xffF7F7F8),
       child: SafeArea(
         top: false,
+        bottom: false,
         child: PageContentWidth(
           child: Column(
             children: [
