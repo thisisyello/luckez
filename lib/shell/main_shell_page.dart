@@ -6,6 +6,7 @@ import 'package:luckez/constants/lotto_round.dart';
 import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
+import 'package:luckez/models/lotto_result_status.dart';
 import 'package:luckez/models/user_profile.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/repositories/notification_repository.dart';
@@ -863,6 +864,8 @@ class _MainShellPageState extends State<MainShellPage> {
         .where((savedNumber) => savedNumber.round == winningRound.round)
         .toList();
 
+    var bestResultStatus = LottoResultStatus.notWon;
+
     for (final savedNumber in targetSavedNumbers) {
       final result = _resultChecker.check(
         savedNumber: savedNumber,
@@ -876,6 +879,10 @@ class _MainShellPageState extends State<MainShellPage> {
         updatedAt: checkedAt,
       );
 
+      if (_resultRank(result.status) > _resultRank(bestResultStatus)) {
+        bestResultStatus = result.status;
+      }
+
       await _savedNumberRepository.update(userId, updatedSavedNumber);
     }
 
@@ -887,7 +894,19 @@ class _MainShellPageState extends State<MainShellPage> {
       userId: userId,
       round: winningRound.round,
       savedNumbersCount: targetSavedNumbers.length,
+      bestResultStatus: bestResultStatus,
     );
+  }
+
+  int _resultRank(LottoResultStatus status) {
+    return switch (status) {
+      LottoResultStatus.pending || LottoResultStatus.notWon => 0,
+      LottoResultStatus.fifth => 1,
+      LottoResultStatus.fourth => 2,
+      LottoResultStatus.third => 3,
+      LottoResultStatus.second => 4,
+      LottoResultStatus.first => 5,
+    };
   }
 
   String _authErrorMessage(FirebaseAuthException error) {

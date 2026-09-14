@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:luckez/models/app_notification.dart';
+import 'package:luckez/models/lotto_result_status.dart';
 
 class NotificationRepository {
   static const _commentMessageMaxLength = 40;
@@ -149,13 +150,17 @@ class NotificationRepository {
     required String userId,
     required int round,
     required int savedNumbersCount,
+    required LottoResultStatus bestResultStatus,
   }) {
     return create(
       userId: userId,
       notificationId: winningResultNotificationId(round),
       type: AppNotificationType.winningResult,
       title: '$round회 당첨 결과가 확인됐어요',
-      message: '저장한 번호 $savedNumbersCount개의 결과를 확인해보세요.',
+      message: _winningResultMessage(
+        savedNumbersCount: savedNumbersCount,
+        bestResultStatus: bestResultStatus,
+      ),
       targetType: AppNotificationTargetType.savedNumber,
       round: round,
     );
@@ -213,6 +218,30 @@ class NotificationRepository {
       'readAt': null,
       'actorId': actorId,
       'actorName': actorName,
+    };
+  }
+
+  String _winningResultMessage({
+    required int savedNumbersCount,
+    required LottoResultStatus bestResultStatus,
+  }) {
+    final resultLabel = _winningResultLabel(bestResultStatus);
+
+    if (resultLabel == null) {
+      return '저장한 번호 $savedNumbersCount개의 결과를 확인해보세요.';
+    }
+
+    return '저장한 번호 중 $resultLabel이 있어요.';
+  }
+
+  String? _winningResultLabel(LottoResultStatus status) {
+    return switch (status) {
+      LottoResultStatus.first => '1등',
+      LottoResultStatus.second => '2등',
+      LottoResultStatus.third => '3등',
+      LottoResultStatus.fourth => '4등',
+      LottoResultStatus.fifth => '5등',
+      LottoResultStatus.pending || LottoResultStatus.notWon => null,
     };
   }
 
