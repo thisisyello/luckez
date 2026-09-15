@@ -1,11 +1,11 @@
 {
-    "name": "luckez",
-    "short_name": "luckez",
+    "name": "Luckez",
+    "short_name": "Luckez",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#EA3B5A",
+    "description": "로또 번호 추천과 저장, 당첨번호 확인을 돕는 앱",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
