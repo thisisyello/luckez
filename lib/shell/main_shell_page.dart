@@ -18,6 +18,8 @@ import 'package:luckez/pages/notification_page.dart';
 import 'package:luckez/pages/purchase_page.dart';
 import 'package:luckez/pages/stats_page.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/widgets/shell_app_bar.dart';
+import 'package:luckez/widgets/shell_bottom_navigation_bar.dart';
 
 class MainShellPage extends StatefulWidget {
   const MainShellPage({super.key});
@@ -228,7 +230,12 @@ class _MainShellPageState extends State<MainShellPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: whiteColor,
-      appBar: _buildAppBar(context),
+      appBar: ShellAppBar(
+        photoUrl: _currentUserPhotoUrl,
+        unreadCount: unreadNotificationsCount,
+        onAccountPressed: _openAccountPage,
+        onNotificationsPressed: _openNotificationPage,
+      ),
       body: IndexedStack(
         index: selectedIndex,
         children: [
@@ -277,94 +284,13 @@ class _MainShellPageState extends State<MainShellPage> {
         ],
       ),
       extendBody: true,
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(14, 0, 14, 8),
-        child: Container(
-          height: 68,
-          decoration: BoxDecoration(
-            color: surfaceColor.withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: borderColor.withValues(alpha: 0.72),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 20,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: NavigationBar(
-            selectedIndex: selectedIndex,
-            height: 68,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            indicatorColor: mainColor.withValues(alpha: 0.1),
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            onDestinationSelected: (index) {
-              setState(() {
-                selectedIndex = index;
-              });
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: '홈',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.bar_chart_outlined),
-                selectedIcon: Icon(Icons.bar_chart),
-                label: '통계',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.shopping_bag_outlined),
-                selectedIcon: Icon(Icons.shopping_bag),
-                label: '구매',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.confirmation_number_outlined),
-                selectedIcon: Icon(Icons.confirmation_number),
-                label: '내 번호',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.forum_outlined),
-                selectedIcon: Icon(Icons.forum),
-                label: '커뮤니티',
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: surfaceColor,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      surfaceTintColor: Colors.transparent,
-      leading: IconButton(
-        icon: _ProfileIcon(photoUrl: _currentUserPhotoUrl),
-        color: textPrimaryColor,
-        tooltip: '계정',
-        onPressed: _openAccountPage,
-      ),
-      actions: [
-        IconButton(
-          icon: _NotificationIcon(unreadCount: unreadNotificationsCount),
-          color: textPrimaryColor,
-          tooltip: '알림',
-          onPressed: _openNotificationPage,
-        ),
-        const SizedBox(width: 8),
-      ],
-      bottom: const PreferredSize(
-        preferredSize: Size.fromHeight(1),
-        child: Divider(height: 1),
+      bottomNavigationBar: ShellBottomNavigationBar(
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
       ),
     );
   }
@@ -655,85 +581,6 @@ class _MainShellPageState extends State<MainShellPage> {
         content: Text(message),
         duration: const Duration(seconds: 1),
       ),
-    );
-  }
-}
-
-class _NotificationIcon extends StatelessWidget {
-  const _NotificationIcon({required this.unreadCount});
-
-  final int unreadCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasUnread = unreadCount > 0;
-    final label = unreadCount > 99 ? '99+' : unreadCount.toString();
-
-    return SizedBox(
-      width: 28,
-      height: 28,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          const Center(
-            child: Icon(
-              Icons.notifications_none,
-              size: 22,
-            ),
-          ),
-          if (hasUnread)
-            Positioned(
-              right: -2,
-              top: -2,
-              child: Container(
-                constraints: const BoxConstraints(
-                  minWidth: 16,
-                  minHeight: 16,
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: mainColor,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: surfaceColor, width: 1.5),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    color: whiteColor,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    height: 1,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProfileIcon extends StatelessWidget {
-  const _ProfileIcon({required this.photoUrl});
-
-  final String? photoUrl;
-
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = photoUrl?.trim();
-
-    if (imageUrl != null && imageUrl.isNotEmpty) {
-      return CircleAvatar(
-        radius: 13,
-        backgroundColor: const Color(0xffF3F3F5),
-        backgroundImage: NetworkImage(imageUrl),
-      );
-    }
-
-    return const Icon(
-      Icons.account_circle_outlined,
-      size: 25,
     );
   }
 }
