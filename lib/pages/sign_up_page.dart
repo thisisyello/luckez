@@ -26,6 +26,20 @@ class _SignUpPageState extends State<SignUpPage> {
   final passwordController = TextEditingController();
   final passwordConfirmController = TextEditingController();
   String? errorText;
+  bool hasSubmitted = false;
+
+  String? get passwordConfirmError {
+    final confirmation = passwordConfirmController.text;
+    if ((confirmation.isNotEmpty || hasSubmitted) &&
+        confirmation != passwordController.text) {
+      return '비밀번호가 일치하지 않습니다';
+    }
+    return null;
+  }
+
+  void _onPasswordChanged(String _) {
+    setState(() {});
+  }
 
   @override
   void dispose() {
@@ -42,6 +56,11 @@ class _SignUpPageState extends State<SignUpPage> {
     final password = passwordController.text;
     final passwordConfirm = passwordConfirmController.text;
 
+    setState(() {
+      hasSubmitted = true;
+      errorText = null;
+    });
+
     if (displayName.isEmpty) {
       setState(() {
         errorText = '이름을 입력해주세요';
@@ -50,9 +69,6 @@ class _SignUpPageState extends State<SignUpPage> {
     }
 
     if (password != passwordConfirm) {
-      setState(() {
-        errorText = '비밀번호가 일치하지 않습니다';
-      });
       return;
     }
 
@@ -72,69 +88,75 @@ class _SignUpPageState extends State<SignUpPage> {
       body: SafeArea(
         top: false,
         child: PageContentWidth(
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
-            children: [
-              AuthFormCard(
-                children: [
-                  SocialAuthButton(
-                    icon: Icons.g_mobiledata,
-                    label: 'Google로 가입하기',
-                    onPressed: widget.onGooglePressed,
-                  ),
-                  const SizedBox(height: 16),
-                  const AuthDivider(label: '이메일 가입'),
-                  const SizedBox(height: 16),
-                  AuthTextField(
-                    controller: nameController,
-                    label: '이름',
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => _submit(),
-                  ),
-                  const SizedBox(height: 10),
-                  AuthTextField(
-                    controller: emailController,
-                    label: '이메일',
-                    keyboardType: TextInputType.emailAddress,
-                    onSubmitted: (_) => _submit(),
-                  ),
-                  const SizedBox(height: 10),
-                  AuthPasswordField(
-                    controller: passwordController,
-                    label: '비밀번호',
-                    onSubmitted: (_) => _submit(),
-                  ),
-                  const SizedBox(height: 10),
-                  AuthPasswordField(
-                    controller: passwordConfirmController,
-                    label: '비밀번호 확인',
-                    onSubmitted: (_) => _submit(),
-                  ),
-                  if (errorText != null) ...[
+          child: FocusTraversalGroup(
+            policy: WidgetOrderTraversalPolicy(),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+              children: [
+                AuthFormCard(
+                  children: [
+                    SocialAuthButton(
+                      icon: Icons.g_mobiledata,
+                      label: 'Google로 가입하기',
+                      onPressed: widget.onGooglePressed,
+                    ),
+                    const SizedBox(height: 16),
+                    const AuthDivider(label: '이메일 가입'),
+                    const SizedBox(height: 16),
+                    AuthTextField(
+                      controller: nameController,
+                      label: '이름',
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _submit(),
+                    ),
                     const SizedBox(height: 10),
-                    Text(
-                      errorText!,
-                      style: const TextStyle(
-                        color: redColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    AuthTextField(
+                      controller: emailController,
+                      label: '이메일',
+                      keyboardType: TextInputType.emailAddress,
+                      onSubmitted: (_) => _submit(),
+                    ),
+                    const SizedBox(height: 10),
+                    AuthPasswordField(
+                      controller: passwordController,
+                      label: '비밀번호',
+                      onChanged: _onPasswordChanged,
+                      onSubmitted: (_) => _submit(),
+                    ),
+                    const SizedBox(height: 10),
+                    AuthPasswordField(
+                      controller: passwordConfirmController,
+                      label: '비밀번호 확인',
+                      onChanged: _onPasswordChanged,
+                      errorText: passwordConfirmError,
+                      onSubmitted: (_) => _submit(),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 10),
+                      Text(
+                        errorText!,
+                        style: const TextStyle(
+                          color: redColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
+                    ],
+                    const SizedBox(height: 14),
+                    PrimaryAuthButton(
+                      label: '이메일로 가입하기',
+                      onPressed: _submit,
                     ),
                   ],
-                  const SizedBox(height: 14),
-                  PrimaryAuthButton(
-                    label: '이메일로 가입하기',
-                    onPressed: _submit,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              AuthSwitchText(
-                text: '이미 계정이 있나요?',
-                actionText: '로그인',
-                onPressed: widget.onLoginPressed,
-              ),
-            ],
+                ),
+                const SizedBox(height: 18),
+                AuthSwitchText(
+                  text: '이미 계정이 있나요?',
+                  actionText: '로그인',
+                  onPressed: widget.onLoginPressed,
+                ),
+              ],
+            ),
           ),
         ),
       ),

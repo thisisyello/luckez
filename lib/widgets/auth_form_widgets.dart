@@ -60,12 +60,16 @@ class AuthPasswordField extends StatefulWidget {
     required this.label,
     this.textInputAction = TextInputAction.done,
     this.onSubmitted,
+    this.onChanged,
+    this.errorText,
   });
 
   final TextEditingController controller;
   final String label;
   final TextInputAction textInputAction;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onChanged;
+  final String? errorText;
 
   @override
   State<AuthPasswordField> createState() => _AuthPasswordFieldState();
@@ -80,9 +84,11 @@ class _AuthPasswordFieldState extends State<AuthPasswordField> {
       controller: widget.controller,
       textInputAction: widget.textInputAction,
       onSubmitted: widget.onSubmitted,
+      onChanged: widget.onChanged,
       obscureText: !isPasswordVisible,
       decoration: InputDecoration(
         labelText: widget.label,
+        errorText: widget.errorText,
         fillColor: backgroundColor,
         suffixIcon: IconButton(
           icon: Icon(
