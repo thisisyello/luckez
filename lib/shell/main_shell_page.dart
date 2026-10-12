@@ -2,16 +2,15 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:luckez/controllers/session_controller.dart';
 import 'package:luckez/controllers/winning_rounds_controller.dart';
 import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
 import 'package:luckez/models/lotto_result_status.dart';
-import 'package:luckez/models/user_profile.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/repositories/notification_repository.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
-import 'package:luckez/repositories/user_repository.dart';
 import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/services/lotto_result_checker.dart';
 import 'package:luckez/pages/account_page.dart';
@@ -31,19 +30,18 @@ class MainShellPage extends StatefulWidget {
 }
 
 class _MainShellPageState extends State<MainShellPage> {
-  static final _authService = AuthService();
+  final _sessionController = SessionController();
   static final _savedNumberRepository = SavedLottoNumberRepository();
   static final _communityRepository = CommunityRepository();
   static final _notificationRepository = NotificationRepository();
-  static final _userRepository = UserRepository();
   final _winningRoundsController = WinningRoundsController();
   static const _resultChecker = LottoResultChecker();
 
   int selectedIndex = 0;
-  String? currentUserId;
-  StreamSubscription<User?>? authSubscription;
+  String? get currentUserId => _sessionController.userId;
+  String? _subscribedUserId;
+  int _sessionErrorRevision = 0;
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
-  StreamSubscription<UserProfile>? userProfileSubscription;
   StreamSubscription<int>? unreadNotificationsSubscription;
   LottoRoundInfo get roundInfo => _winningRoundsController.roundInfo;
   final List<SavedLottoNumber> savedNumbers = [];
@@ -51,15 +49,13 @@ class _MainShellPageState extends State<MainShellPage> {
   bool get isWinningRoundsLoading => _winningRoundsController.isLoading;
   bool get hasWinningRoundsError => _winningRoundsController.hasError;
   bool _wasWinningRoundsError = false;
-  String currentUserRole = 'user';
   int unreadNotificationsCount = 0;
-  UserProfile? currentUserProfile;
-  User? currentUser;
 
   @override
   void initState() {
     super.initState();
-    _listenAuthState();
+    _sessionController.addListener(_onSessionChanged);
+    _sessionController.start();
     _winningRoundsController.addListener(_onWinningRoundsChanged);
     _winningRoundsController.start();
   }
@@ -73,89 +69,39 @@ class _MainShellPageState extends State<MainShellPage> {
     setState(() {});
   }
 
-  void _listenAuthState() {
-    authSubscription?.cancel();
-    authSubscription = _authService.authStateChanges.listen((user) {
-      if (!mounted) {
-        return;
+  void _onSessionChanged() {
+    if (!mounted) return;
+    final userId = currentUserId;
+    if (_subscribedUserId != userId) {
+      _subscribedUserId = userId;
+      savedNumbersSubscription?.cancel();
+      savedNumbersSubscription = null;
+      unreadNotificationsSubscription?.cancel();
+      unreadNotificationsSubscription = null;
+      savedNumbers.clear();
+      unreadNotificationsCount = 0;
+      if (userId != null) {
+        _listenSavedNumbers(userId);
+        _listenUnreadNotifications(userId);
       }
-
-      setState(() {
-        currentUser = user;
-        currentUserId = user?.uid;
-
-        if (user == null) {
-          savedNumbers.clear();
-          currentUserRole = 'user';
-          currentUserProfile = null;
-          unreadNotificationsCount = 0;
-        }
-      });
-
-      if (user == null) {
-        savedNumbersSubscription?.cancel();
-        savedNumbersSubscription = null;
-        userProfileSubscription?.cancel();
-        userProfileSubscription = null;
-        unreadNotificationsSubscription?.cancel();
-        unreadNotificationsSubscription = null;
-        return;
-      }
-
-      _ensureUserProfile(user);
-      _listenUserProfile(user.uid);
-      _listenSavedNumbers(user.uid);
-      _listenUnreadNotifications(user.uid);
-    });
+    }
+    if (_sessionErrorRevision != _sessionController.errorRevision) {
+      _sessionErrorRevision = _sessionController.errorRevision;
+      final message = _sessionController.errorMessage;
+      if (message != null) _showComingSoonMessage(message);
+    }
+    setState(() {});
   }
 
   @override
   void dispose() {
-    authSubscription?.cancel();
+    _sessionController.removeListener(_onSessionChanged);
+    _sessionController.dispose();
     savedNumbersSubscription?.cancel();
     _winningRoundsController.removeListener(_onWinningRoundsChanged);
     _winningRoundsController.dispose();
-    userProfileSubscription?.cancel();
     unreadNotificationsSubscription?.cancel();
     super.dispose();
-  }
-
-  Future<void> _ensureUserProfile(User user) async {
-    try {
-      await _userRepository.ensureUserProfile(user);
-    } catch (_) {
-      if (!mounted) {
-        return;
-      }
-
-      _showComingSoonMessage('회원 정보를 동기화하지 못했어요');
-    }
-  }
-
-  void _listenUserProfile(String userId) {
-    userProfileSubscription?.cancel();
-    userProfileSubscription = _userRepository.watchUserProfile(userId).listen(
-      (profile) {
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          currentUserProfile = profile;
-          currentUserRole = profile.role;
-        });
-      },
-      onError: (_) {
-        if (!mounted) {
-          return;
-        }
-
-        setState(() {
-          currentUserProfile = null;
-          currentUserRole = 'user';
-        });
-      },
-    );
   }
 
   void _listenUnreadNotifications(String userId) {
@@ -163,7 +109,7 @@ class _MainShellPageState extends State<MainShellPage> {
     unreadNotificationsSubscription =
         _notificationRepository.watchUnreadCount(userId).listen(
       (count) {
-        if (!mounted) {
+        if (!mounted || currentUserId != userId) {
           return;
         }
 
@@ -172,7 +118,7 @@ class _MainShellPageState extends State<MainShellPage> {
         });
       },
       onError: (_) {
-        if (!mounted) {
+        if (!mounted || currentUserId != userId) {
           return;
         }
 
@@ -188,7 +134,7 @@ class _MainShellPageState extends State<MainShellPage> {
     savedNumbersSubscription =
         _savedNumberRepository.watchSavedNumbers(userId).listen(
       (numbers) {
-        if (!mounted) {
+        if (!mounted || currentUserId != userId) {
           return;
         }
 
@@ -199,7 +145,7 @@ class _MainShellPageState extends State<MainShellPage> {
         });
       },
       onError: (_) {
-        if (!mounted) {
+        if (!mounted || currentUserId != userId) {
           return;
         }
 
@@ -526,51 +472,13 @@ class _MainShellPageState extends State<MainShellPage> {
     return savedNumbers.where((savedNumber) => savedNumber.isPurchased).length;
   }
 
-  String? get _currentUserName {
-    final user = currentUser;
+  String? get _currentUserName => _sessionController.displayName;
 
-    if (user == null) {
-      return null;
-    }
+  String? get _currentUserEmail => _sessionController.email;
 
-    final profileDisplayName = currentUserProfile?.displayName;
+  String? get _currentUserPhotoUrl => _sessionController.photoUrl;
 
-    if (profileDisplayName != null && profileDisplayName.trim().isNotEmpty) {
-      return profileDisplayName.trim();
-    }
-
-    final displayName = user.displayName;
-
-    if (displayName != null && displayName.trim().isNotEmpty) {
-      return displayName.trim();
-    }
-
-    final email = _currentUserEmail;
-
-    if (email != null && email.trim().isNotEmpty) {
-      return email.trim();
-    }
-
-    return '익명';
-  }
-
-  String? get _currentUserEmail {
-    return currentUserProfile?.email ?? currentUser?.email;
-  }
-
-  String? get _currentUserPhotoUrl {
-    final profilePhotoUrl = currentUserProfile?.photoUrl;
-
-    if (profilePhotoUrl != null && profilePhotoUrl.trim().isNotEmpty) {
-      return profilePhotoUrl.trim();
-    }
-
-    return currentUser?.photoURL;
-  }
-
-  bool get _isAdmin {
-    return currentUserRole == 'admin';
-  }
+  bool get _isAdmin => _sessionController.isAdmin;
 
   bool _isWinningRoundRegistered(int round) {
     return _findWinningRound(round) != null;
@@ -647,22 +555,7 @@ class _MainShellPageState extends State<MainShellPage> {
       return;
     }
 
-    await _authService.updateDisplayName(displayName);
-    await _userRepository.updateDisplayName(
-      userId: userId,
-      displayName: displayName,
-    );
-
-    if (!mounted) {
-      return;
-    }
-
-    setState(() {
-      currentUser = _authService.currentUser;
-      currentUserProfile = currentUserProfile?.copyWith(
-        displayName: displayName,
-      );
-    });
+    await _sessionController.updateDisplayName(displayName);
   }
 
   void _openMyNumbersTabFromAccount() {
@@ -675,7 +568,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   Future<void> _signOut() async {
     try {
-      await _authService.signOut();
+      await _sessionController.signOut();
 
       if (!mounted) {
         return;
@@ -693,7 +586,7 @@ class _MainShellPageState extends State<MainShellPage> {
 
   Future<void> _signInWithGoogle() async {
     try {
-      await _authService.signInWithGoogle();
+      await _sessionController.signInWithGoogle();
 
       if (!mounted) {
         return;
@@ -725,10 +618,7 @@ class _MainShellPageState extends State<MainShellPage> {
     }
 
     try {
-      await _authService.signInWithEmail(
-        email: email,
-        password: password,
-      );
+      await _sessionController.signInWithEmail(email, password);
 
       if (!mounted) {
         return;
@@ -767,16 +657,7 @@ class _MainShellPageState extends State<MainShellPage> {
     }
 
     try {
-      final credential = await _authService.signUpWithEmail(
-        displayName: displayName.trim(),
-        email: email,
-        password: password,
-      );
-      final user = credential.user ?? _authService.currentUser;
-
-      if (user != null) {
-        await _userRepository.ensureUserProfile(user);
-      }
+      await _sessionController.signUpWithEmail(displayName, email, password);
 
       if (!mounted) {
         return;
