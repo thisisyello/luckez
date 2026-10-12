@@ -1,7 +1,6 @@
-import 'dart:async';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:luckez/controllers/notifications_controller.dart';
 import 'package:luckez/controllers/saved_numbers_controller.dart';
 import 'package:luckez/controllers/session_controller.dart';
 import 'package:luckez/controllers/winning_rounds_controller.dart';
@@ -32,6 +31,9 @@ class _MainShellPageState extends State<MainShellPage> {
   final _savedNumbersController = SavedNumbersController();
   static final _communityRepository = CommunityRepository();
   static final _notificationRepository = NotificationRepository();
+  final _notificationsController = NotificationsController(
+    repository: _notificationRepository,
+  );
   final _winningRoundsController = WinningRoundsController();
 
   int selectedIndex = 0;
@@ -39,19 +41,19 @@ class _MainShellPageState extends State<MainShellPage> {
   String? _subscribedUserId;
   int _sessionErrorRevision = 0;
   int _savedNumbersErrorRevision = 0;
-  StreamSubscription<int>? unreadNotificationsSubscription;
   LottoRoundInfo get roundInfo => _winningRoundsController.roundInfo;
   List<SavedLottoNumber> get savedNumbers => _savedNumbersController.numbers;
   List<LottoWinningRound> get winningRounds => _winningRoundsController.rounds;
   bool get isWinningRoundsLoading => _winningRoundsController.isLoading;
   bool get hasWinningRoundsError => _winningRoundsController.hasError;
   bool _wasWinningRoundsError = false;
-  int unreadNotificationsCount = 0;
+  int get unreadNotificationsCount => _notificationsController.unreadCount;
 
   @override
   void initState() {
     super.initState();
     _savedNumbersController.addListener(_onSavedNumbersChanged);
+    _notificationsController.addListener(_onNotificationsChanged);
     _sessionController.addListener(_onSessionChanged);
     _sessionController.start();
     _winningRoundsController.addListener(_onWinningRoundsChanged);
@@ -73,12 +75,7 @@ class _MainShellPageState extends State<MainShellPage> {
     if (_subscribedUserId != userId) {
       _subscribedUserId = userId;
       _savedNumbersController.bindUser(userId);
-      unreadNotificationsSubscription?.cancel();
-      unreadNotificationsSubscription = null;
-      unreadNotificationsCount = 0;
-      if (userId != null) {
-        _listenUnreadNotifications(userId);
-      }
+      _notificationsController.bindUser(userId);
     }
     if (_sessionErrorRevision != _sessionController.errorRevision) {
       _sessionErrorRevision = _sessionController.errorRevision;
@@ -99,6 +96,11 @@ class _MainShellPageState extends State<MainShellPage> {
     setState(() {});
   }
 
+  void _onNotificationsChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _sessionController.removeListener(_onSessionChanged);
@@ -107,33 +109,9 @@ class _MainShellPageState extends State<MainShellPage> {
     _savedNumbersController.dispose();
     _winningRoundsController.removeListener(_onWinningRoundsChanged);
     _winningRoundsController.dispose();
-    unreadNotificationsSubscription?.cancel();
+    _notificationsController.removeListener(_onNotificationsChanged);
+    _notificationsController.dispose();
     super.dispose();
-  }
-
-  void _listenUnreadNotifications(String userId) {
-    unreadNotificationsSubscription?.cancel();
-    unreadNotificationsSubscription =
-        _notificationRepository.watchUnreadCount(userId).listen(
-      (count) {
-        if (!mounted || currentUserId != userId) {
-          return;
-        }
-
-        setState(() {
-          unreadNotificationsCount = count;
-        });
-      },
-      onError: (_) {
-        if (!mounted || currentUserId != userId) {
-          return;
-        }
-
-        setState(() {
-          unreadNotificationsCount = 0;
-        });
-      },
-    );
   }
 
   Future<void> saveLottoNumbers(List<int> numbers) async {
