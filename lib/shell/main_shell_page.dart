@@ -2,17 +2,15 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:luckez/controllers/saved_numbers_controller.dart';
 import 'package:luckez/controllers/session_controller.dart';
 import 'package:luckez/controllers/winning_rounds_controller.dart';
 import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
-import 'package:luckez/models/lotto_result_status.dart';
 import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/repositories/notification_repository.dart';
-import 'package:luckez/repositories/saved_lotto_number_repository.dart';
 import 'package:luckez/services/auth_service.dart';
-import 'package:luckez/services/lotto_result_checker.dart';
 import 'package:luckez/pages/account_page.dart';
 import 'package:luckez/pages/community_page.dart';
 import 'package:luckez/pages/lotto_draw_page.dart';
@@ -31,20 +29,19 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   final _sessionController = SessionController();
-  static final _savedNumberRepository = SavedLottoNumberRepository();
+  final _savedNumbersController = SavedNumbersController();
   static final _communityRepository = CommunityRepository();
   static final _notificationRepository = NotificationRepository();
   final _winningRoundsController = WinningRoundsController();
-  static const _resultChecker = LottoResultChecker();
 
   int selectedIndex = 0;
   String? get currentUserId => _sessionController.userId;
   String? _subscribedUserId;
   int _sessionErrorRevision = 0;
-  StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
+  int _savedNumbersErrorRevision = 0;
   StreamSubscription<int>? unreadNotificationsSubscription;
   LottoRoundInfo get roundInfo => _winningRoundsController.roundInfo;
-  final List<SavedLottoNumber> savedNumbers = [];
+  List<SavedLottoNumber> get savedNumbers => _savedNumbersController.numbers;
   List<LottoWinningRound> get winningRounds => _winningRoundsController.rounds;
   bool get isWinningRoundsLoading => _winningRoundsController.isLoading;
   bool get hasWinningRoundsError => _winningRoundsController.hasError;
@@ -54,6 +51,7 @@ class _MainShellPageState extends State<MainShellPage> {
   @override
   void initState() {
     super.initState();
+    _savedNumbersController.addListener(_onSavedNumbersChanged);
     _sessionController.addListener(_onSessionChanged);
     _sessionController.start();
     _winningRoundsController.addListener(_onWinningRoundsChanged);
@@ -74,14 +72,11 @@ class _MainShellPageState extends State<MainShellPage> {
     final userId = currentUserId;
     if (_subscribedUserId != userId) {
       _subscribedUserId = userId;
-      savedNumbersSubscription?.cancel();
-      savedNumbersSubscription = null;
+      _savedNumbersController.bindUser(userId);
       unreadNotificationsSubscription?.cancel();
       unreadNotificationsSubscription = null;
-      savedNumbers.clear();
       unreadNotificationsCount = 0;
       if (userId != null) {
-        _listenSavedNumbers(userId);
         _listenUnreadNotifications(userId);
       }
     }
@@ -93,11 +88,23 @@ class _MainShellPageState extends State<MainShellPage> {
     setState(() {});
   }
 
+  void _onSavedNumbersChanged() {
+    if (!mounted) return;
+    if (_savedNumbersErrorRevision != _savedNumbersController.errorRevision) {
+      _savedNumbersErrorRevision = _savedNumbersController.errorRevision;
+      if (_savedNumbersController.hasError) {
+        _showComingSoonMessage('저장번호를 불러오지 못했어요');
+      }
+    }
+    setState(() {});
+  }
+
   @override
   void dispose() {
     _sessionController.removeListener(_onSessionChanged);
     _sessionController.dispose();
-    savedNumbersSubscription?.cancel();
+    _savedNumbersController.removeListener(_onSavedNumbersChanged);
+    _savedNumbersController.dispose();
     _winningRoundsController.removeListener(_onWinningRoundsChanged);
     _winningRoundsController.dispose();
     unreadNotificationsSubscription?.cancel();
@@ -129,31 +136,6 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  void _listenSavedNumbers(String userId) {
-    savedNumbersSubscription?.cancel();
-    savedNumbersSubscription =
-        _savedNumberRepository.watchSavedNumbers(userId).listen(
-      (numbers) {
-        if (!mounted || currentUserId != userId) {
-          return;
-        }
-
-        setState(() {
-          savedNumbers
-            ..clear()
-            ..addAll(numbers);
-        });
-      },
-      onError: (_) {
-        if (!mounted || currentUserId != userId) {
-          return;
-        }
-
-        _showComingSoonMessage('저장번호를 불러오지 못했어요');
-      },
-    );
-  }
-
   Future<void> saveLottoNumbers(List<int> numbers) async {
     final userId = currentUserId;
 
@@ -163,21 +145,15 @@ class _MainShellPageState extends State<MainShellPage> {
       return;
     }
 
-    final now = DateTime.now();
-    final savedNumber = _applyWinningResult(
-      SavedLottoNumber(
-        id: now.microsecondsSinceEpoch.toString(),
-        numbers: List<int>.from(numbers),
-        createdAt: now,
-        round: roundInfo.activeRound,
-      ),
-      checkedAt: now,
-    );
-
     try {
-      await _savedNumberRepository.save(userId, savedNumber);
+      final saved = await _savedNumbersController.save(
+        numbers,
+        round: roundInfo.activeRound,
+        winningRound: _findWinningRound(roundInfo.activeRound),
+      );
+      if (!saved) return;
     } catch (_) {
-      if (!mounted) {
+      if (!mounted || currentUserId != userId) {
         return;
       }
 
@@ -185,7 +161,7 @@ class _MainShellPageState extends State<MainShellPage> {
       return;
     }
 
-    if (!mounted) {
+    if (!mounted || currentUserId != userId) {
       return;
     }
 
@@ -197,76 +173,39 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  SavedLottoNumber _applyWinningResult(
-    SavedLottoNumber savedNumber, {
-    required DateTime checkedAt,
-  }) {
-    final winningRound = _findWinningRound(savedNumber.round);
-
-    if (winningRound == null) {
-      return savedNumber;
-    }
-
-    final result = _resultChecker.check(
-      savedNumber: savedNumber,
-      winningRound: winningRound,
-    );
-
-    return savedNumber.copyWith(
-      resultStatus: result.status,
-      matchCount: result.matchCount,
-      isBonusMatched: result.isBonusMatched,
-      checkedAt: checkedAt,
-    );
-  }
-
   LottoWinningRound? _findWinningRound(int? round) {
     return _winningRoundsController.findRound(round);
   }
 
   Future<void> togglePurchased(String id) async {
     final userId = currentUserId;
-    final index =
-        savedNumbers.indexWhere((savedNumber) => savedNumber.id == id);
-
-    if (userId == null || index == -1) {
-      return;
+    if (userId == null) return;
+    try {
+      await _savedNumbersController.togglePurchased(id);
+    } catch (_) {
+      if (!mounted || currentUserId != userId) return;
+      _showComingSoonMessage('저장번호 수정에 실패했어요');
     }
-
-    final savedNumber = savedNumbers[index];
-    final updatedSavedNumber = savedNumber.copyWith(
-      isPurchased: !savedNumber.isPurchased,
-      updatedAt: DateTime.now(),
-    );
-
-    await _updateSavedNumber(userId, updatedSavedNumber);
   }
 
   Future<void> updateSavedNumbers(String id, List<int> numbers) async {
     final userId = currentUserId;
-    final index =
-        savedNumbers.indexWhere((savedNumber) => savedNumber.id == id);
-
-    if (userId == null || index == -1) {
-      return;
-    }
+    if (userId == null) return;
 
     final messenger = ScaffoldMessenger.of(context);
-    final now = DateTime.now();
-    final savedNumber = savedNumbers[index].copyWith(
-      numbers: List<int>.from(numbers)..sort(),
-      updatedAt: now,
-    );
-    final updatedSavedNumber = _applyWinningResult(
-      savedNumber,
-      checkedAt: now,
-    );
-
-    final isUpdated = await _updateSavedNumber(userId, updatedSavedNumber);
-
-    if (!mounted || !isUpdated) {
+    try {
+      final updated = await _savedNumbersController.updateNumbers(
+        id,
+        numbers,
+        winningRound: _findWinningRound(_savedNumbersController.roundFor(id)),
+      );
+      if (!updated) return;
+    } catch (_) {
+      if (!mounted || currentUserId != userId) return;
+      _showComingSoonMessage('저장번호 수정에 실패했어요');
       return;
     }
+    if (!mounted || currentUserId != userId) return;
 
     messenger.showSnackBar(
       const SnackBar(
@@ -274,23 +213,6 @@ class _MainShellPageState extends State<MainShellPage> {
         duration: Duration(seconds: 1),
       ),
     );
-  }
-
-  Future<bool> _updateSavedNumber(
-    String userId,
-    SavedLottoNumber savedNumber,
-  ) async {
-    try {
-      await _savedNumberRepository.update(userId, savedNumber);
-      return true;
-    } catch (_) {
-      if (!mounted) {
-        return false;
-      }
-
-      _showComingSoonMessage('저장번호 수정에 실패했어요');
-      return false;
-    }
   }
 
   Future<void> deleteSavedNumber(String id) async {
@@ -301,9 +223,10 @@ class _MainShellPageState extends State<MainShellPage> {
     }
 
     try {
-      await _savedNumberRepository.delete(userId, id);
+      final deleted = await _savedNumbersController.delete(id);
+      if (!deleted) return;
     } catch (_) {
-      if (!mounted) {
+      if (!mounted || currentUserId != userId) {
         return;
       }
 
@@ -311,7 +234,7 @@ class _MainShellPageState extends State<MainShellPage> {
       return;
     }
 
-    if (!mounted) {
+    if (!mounted || currentUserId != userId) {
       return;
     }
 
@@ -468,9 +391,7 @@ class _MainShellPageState extends State<MainShellPage> {
     );
   }
 
-  int get _purchasedNumbersCount {
-    return savedNumbers.where((savedNumber) => savedNumber.isPurchased).length;
-  }
+  int get _purchasedNumbersCount => _savedNumbersController.purchasedCount;
 
   String? get _currentUserName => _sessionController.displayName;
 
@@ -691,7 +612,7 @@ class _MainShellPageState extends State<MainShellPage> {
     try {
       await _winningRoundsController.saveWinningRound(winningRound);
 
-      if (userId != null) {
+      if (userId != null && currentUserId == userId) {
         await _refreshSavedNumberResultsForRound(userId, winningRound);
       }
     } catch (_) {
@@ -718,54 +639,15 @@ class _MainShellPageState extends State<MainShellPage> {
     String userId,
     LottoWinningRound winningRound,
   ) async {
-    final checkedAt = DateTime.now();
-    final targetSavedNumbers = savedNumbers
-        .where((savedNumber) => savedNumber.round == winningRound.round)
-        .toList();
-
-    var bestResultStatus = LottoResultStatus.notWon;
-
-    for (final savedNumber in targetSavedNumbers) {
-      final result = _resultChecker.check(
-        savedNumber: savedNumber,
-        winningRound: winningRound,
-      );
-      final updatedSavedNumber = savedNumber.copyWith(
-        resultStatus: result.status,
-        matchCount: result.matchCount,
-        isBonusMatched: result.isBonusMatched,
-        checkedAt: checkedAt,
-        updatedAt: checkedAt,
-      );
-
-      if (_resultRank(result.status) > _resultRank(bestResultStatus)) {
-        bestResultStatus = result.status;
-      }
-
-      await _savedNumberRepository.update(userId, updatedSavedNumber);
-    }
-
-    if (targetSavedNumbers.isEmpty) {
-      return;
-    }
+    final summary = await _savedNumbersController.refreshResults(winningRound);
+    if (!mounted || currentUserId != userId || summary == null) return;
 
     await _notificationRepository.createWinningResultNotification(
       userId: userId,
       round: winningRound.round,
-      savedNumbersCount: targetSavedNumbers.length,
-      bestResultStatus: bestResultStatus,
+      savedNumbersCount: summary.savedNumbersCount,
+      bestResultStatus: summary.bestResultStatus,
     );
-  }
-
-  int _resultRank(LottoResultStatus status) {
-    return switch (status) {
-      LottoResultStatus.pending || LottoResultStatus.notWon => 0,
-      LottoResultStatus.fifth => 1,
-      LottoResultStatus.fourth => 2,
-      LottoResultStatus.third => 3,
-      LottoResultStatus.second => 4,
-      LottoResultStatus.first => 5,
-    };
   }
 
   String _authErrorMessage(FirebaseAuthException error) {
