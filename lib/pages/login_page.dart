@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/pages/account_page.dart';
+import 'package:luckez/pages/password_reset_page.dart';
+import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/auth_form_widgets.dart';
@@ -73,7 +75,25 @@ class _LoginPageState extends State<LoginPage> {
                     label: '비밀번호',
                     onSubmitted: (_) => _submit(),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => PasswordResetPage(
+                              initialEmail: emailController.text.trim(),
+                              onSubmit: (email) =>
+                                  AuthService().sendPasswordResetEmail(email),
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('비밀번호를 잊으셨나요?'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   PrimaryAuthButton(
                     label: '로그인',
                     onPressed: _submit,

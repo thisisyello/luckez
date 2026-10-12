@@ -17,6 +17,10 @@ class AuthService {
 
   Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
 
+  Future<void> sendPasswordResetEmail(String email) {
+    return _firebaseAuth.sendPasswordResetEmail(email: email);
+  }
+
   Future<UserCredential> signInWithEmail({
     required String email,
     required String password,

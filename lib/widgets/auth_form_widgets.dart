@@ -30,11 +30,17 @@ class AuthTextField extends StatelessWidget {
     this.textInputAction = TextInputAction.done,
     this.onSubmitted,
     this.keyboardType,
+    this.errorText,
+    this.onChanged,
+    this.enabled = true,
   });
 
   final TextEditingController controller;
   final String label;
   final TextInputType? keyboardType;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
+  final bool enabled;
   final TextInputAction textInputAction;
   final ValueChanged<String>? onSubmitted;
 
@@ -45,8 +51,11 @@ class AuthTextField extends StatelessWidget {
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       onSubmitted: onSubmitted,
+      onChanged: onChanged,
+      enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
+        errorText: errorText,
         fillColor: backgroundColor,
       ),
     );
