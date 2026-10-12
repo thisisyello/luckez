@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:luckez/constants/lotto_round.dart';
+import 'package:luckez/controllers/winning_rounds_controller.dart';
 import 'package:luckez/models/lotto_round_info.dart';
 import 'package:luckez/models/lotto_winning_round.dart';
 import 'package:luckez/models/saved_lotto_number.dart';
@@ -12,7 +12,6 @@ import 'package:luckez/repositories/community_repository.dart';
 import 'package:luckez/repositories/notification_repository.dart';
 import 'package:luckez/repositories/saved_lotto_number_repository.dart';
 import 'package:luckez/repositories/user_repository.dart';
-import 'package:luckez/repositories/winning_round_repository.dart';
 import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/services/lotto_result_checker.dart';
 import 'package:luckez/pages/account_page.dart';
@@ -37,24 +36,21 @@ class _MainShellPageState extends State<MainShellPage> {
   static final _communityRepository = CommunityRepository();
   static final _notificationRepository = NotificationRepository();
   static final _userRepository = UserRepository();
-  static final _winningRoundRepository = WinningRoundRepository();
+  final _winningRoundsController = WinningRoundsController();
   static const _resultChecker = LottoResultChecker();
 
   int selectedIndex = 0;
   String? currentUserId;
   StreamSubscription<User?>? authSubscription;
   StreamSubscription<List<SavedLottoNumber>>? savedNumbersSubscription;
-  StreamSubscription<List<LottoWinningRound>>? winningRoundsSubscription;
   StreamSubscription<UserProfile>? userProfileSubscription;
   StreamSubscription<int>? unreadNotificationsSubscription;
-  LottoRoundInfo roundInfo = const LottoRoundInfo(
-    activeRound: initialActiveRound,
-    latestDrawRound: initialLatestDrawRound,
-  );
+  LottoRoundInfo get roundInfo => _winningRoundsController.roundInfo;
   final List<SavedLottoNumber> savedNumbers = [];
-  List<LottoWinningRound> winningRounds = [];
-  bool isWinningRoundsLoading = true;
-  bool hasWinningRoundsError = false;
+  List<LottoWinningRound> get winningRounds => _winningRoundsController.rounds;
+  bool get isWinningRoundsLoading => _winningRoundsController.isLoading;
+  bool get hasWinningRoundsError => _winningRoundsController.hasError;
+  bool _wasWinningRoundsError = false;
   String currentUserRole = 'user';
   int unreadNotificationsCount = 0;
   UserProfile? currentUserProfile;
@@ -64,41 +60,17 @@ class _MainShellPageState extends State<MainShellPage> {
   void initState() {
     super.initState();
     _listenAuthState();
-    _listenWinningRounds();
+    _winningRoundsController.addListener(_onWinningRoundsChanged);
+    _winningRoundsController.start();
   }
 
-  void _listenWinningRounds() {
-    winningRoundsSubscription?.cancel();
-    winningRoundsSubscription =
-        _winningRoundRepository.watchWinningRounds().listen(
-      (rounds) {
-        if (!mounted || rounds.isEmpty) {
-          return;
-        }
-
-        setState(() {
-          winningRounds = rounds;
-          isWinningRoundsLoading = false;
-          hasWinningRoundsError = false;
-          roundInfo = roundInfo.copyWith(
-            activeRound: rounds.last.round + 1,
-            latestDrawRound: rounds.last.round,
-          );
-        });
-      },
-      onError: (_) {
-        if (!mounted) {
-          return;
-        }
-
-        _showComingSoonMessage('당첨번호를 불러오지 못했어요');
-        setState(() {
-          winningRounds = [];
-          isWinningRoundsLoading = false;
-          hasWinningRoundsError = true;
-        });
-      },
-    );
+  void _onWinningRoundsChanged() {
+    if (!mounted) return;
+    if (hasWinningRoundsError && !_wasWinningRoundsError) {
+      _showComingSoonMessage('당첨번호를 불러오지 못했어요');
+    }
+    _wasWinningRoundsError = hasWinningRoundsError;
+    setState(() {});
   }
 
   void _listenAuthState() {
@@ -141,7 +113,8 @@ class _MainShellPageState extends State<MainShellPage> {
   void dispose() {
     authSubscription?.cancel();
     savedNumbersSubscription?.cancel();
-    winningRoundsSubscription?.cancel();
+    _winningRoundsController.removeListener(_onWinningRoundsChanged);
+    _winningRoundsController.dispose();
     userProfileSubscription?.cancel();
     unreadNotificationsSubscription?.cancel();
     super.dispose();
@@ -302,17 +275,7 @@ class _MainShellPageState extends State<MainShellPage> {
   }
 
   LottoWinningRound? _findWinningRound(int? round) {
-    if (round == null) {
-      return null;
-    }
-
-    for (final winningRound in winningRounds) {
-      if (winningRound.round == round) {
-        return winningRound;
-      }
-    }
-
-    return null;
+    return _winningRoundsController.findRound(round);
   }
 
   Future<void> togglePurchased(String id) async {
@@ -845,7 +808,7 @@ class _MainShellPageState extends State<MainShellPage> {
     final isExistingRound = _findWinningRound(winningRound.round) != null;
 
     try {
-      await _winningRoundRepository.saveWinningRound(winningRound);
+      await _winningRoundsController.saveWinningRound(winningRound);
 
       if (userId != null) {
         await _refreshSavedNumberResultsForRound(userId, winningRound);
