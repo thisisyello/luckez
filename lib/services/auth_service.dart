@@ -21,6 +21,23 @@ class AuthService {
     return _firebaseAuth.sendPasswordResetEmail(email: email);
   }
 
+  Future<void> reauthenticateWithPassword(String email, String password) async {
+    final user = currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(code: 'user-not-found');
+    }
+    if (user.email?.toLowerCase() != email.trim().toLowerCase()) {
+      throw FirebaseAuthException(code: 'user-mismatch');
+    }
+    if (!user.providerData
+        .any((provider) => provider.providerId == 'password')) {
+      throw FirebaseAuthException(code: 'password-provider-required');
+    }
+    await user.reauthenticateWithCredential(
+      EmailAuthProvider.credential(email: email.trim(), password: password),
+    );
+  }
+
   Future<UserCredential> signInWithEmail({
     required String email,
     required String password,
@@ -54,6 +71,37 @@ class AuthService {
       return _firebaseAuth.signInWithPopup(googleProvider);
     }
 
+    return _firebaseAuth.signInWithCredential(await _googleCredential());
+  }
+
+  Future<void> reauthenticateWithGoogle() async {
+    final user = currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(code: 'user-not-found');
+    }
+    if (!user.providerData
+        .any((provider) => provider.providerId == 'google.com')) {
+      throw FirebaseAuthException(code: 'google-provider-required');
+    }
+    try {
+      if (kIsWeb) {
+        await user.reauthenticateWithPopup(
+          GoogleAuthProvider()
+            ..setCustomParameters({'prompt': 'select_account'}),
+        );
+      } else {
+        await user.reauthenticateWithCredential(await _googleCredential());
+      }
+    } on FirebaseAuthException catch (error) {
+      if (error.code == 'popup-closed-by-user' ||
+          error.code == 'cancelled-popup-request') {
+        throw const AuthCancelledException();
+      }
+      rethrow;
+    }
+  }
+
+  Future<OAuthCredential> _googleCredential() async {
     await _ensureGoogleSignInInitialized();
 
     final GoogleSignInAccount googleUser;
@@ -73,7 +121,7 @@ class AuthService {
       idToken: googleAuth.idToken,
     );
 
-    return _firebaseAuth.signInWithCredential(credential);
+    return credential;
   }
 
   Future<void> updateDisplayName(String displayName) async {

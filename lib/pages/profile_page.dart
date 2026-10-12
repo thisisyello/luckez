@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:luckez/pages/account_deletion_page.dart';
+import 'package:luckez/services/auth_service.dart';
 import 'package:luckez/theme/app_colors.dart';
 import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/app_card.dart';
@@ -122,6 +124,39 @@ class _ProfilePageState extends State<ProfilePage> {
                       value: widget.userId,
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 18),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    final authService = AuthService();
+                    final providers = authService.currentUser?.providerData;
+                    final useGoogle = providers != null &&
+                        providers
+                            .any((item) => item.providerId == 'google.com') &&
+                        !providers.any((item) => item.providerId == 'password');
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => AccountDeletionPage(
+                          onGoogleVerify: useGoogle
+                              ? authService.reauthenticateWithGoogle
+                              : null,
+                          onVerify: (email, password) => authService
+                              .reauthenticateWithPassword(email, password),
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.person_remove_outlined, size: 17),
+                  label: const Text('회원 탈퇴'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: greyColor,
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
             ],
