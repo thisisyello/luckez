@@ -45,8 +45,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '475615354311',
     projectId: 'luckez-9883e',
     storageBucket: 'luckez-9883e.firebasestorage.app',
-    androidClientId: '475615354311-k8ji58qaofjgphkfidrsa6vlq8foev1v.apps.googleusercontent.com',
-    iosClientId: '475615354311-vhe7c3d2otnmcumkj41s9hmno5r1r20j.apps.googleusercontent.com',
+    androidClientId:
+        '475615354311-k8ji58qaofjgphkfidrsa6vlq8foev1v.apps.googleusercontent.com',
+    iosClientId:
+        '475615354311-vhe7c3d2otnmcumkj41s9hmno5r1r20j.apps.googleusercontent.com',
     iosBundleId: 'com.thisisyello.luckez',
   );
 }
