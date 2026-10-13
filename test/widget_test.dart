@@ -1,30 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:luckez/main.dart';
+import 'package:luckez/pages/lotto_draw_page.dart';
+import 'package:luckez/widgets/lotto_ball.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const LuckezApp());
+  testWidgets('Home generates valid numbers and passes them to save callback',
+      (tester) async {
+    List<int>? savedNumbers;
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: LottoDrawPage(
+          savedNumbersCount: 2,
+          onSaveNumbers: (numbers) => savedNumbers = List.of(numbers),
+        ),
+      ),
+    ));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    List<int> displayedNumbers() => tester
+        .widgetList<LottoBall>(find.byType(LottoBall))
+        .map((ball) => ball.number)
+        .toList();
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    void expectValidNumbers(List<int> numbers) {
+      expect(numbers, hasLength(6));
+      expect(numbers.toSet(), hasLength(6));
+      expect(numbers.every((number) => number >= 1 && number <= 45), isTrue);
+      expect(numbers, List<int>.of(numbers)..sort());
+    }
+
+    expectValidNumbers(displayedNumbers());
+    expect(find.text('저장한 번호 2개'), findsOneWidget);
+    await tester.tap(find.text('다시 뽑기'));
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    final numbers = displayedNumbers();
+    expectValidNumbers(numbers);
+    await tester.tap(find.text('저장하기'));
+    expect(savedNumbers, numbers);
   });
 }
