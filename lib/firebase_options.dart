@@ -39,15 +39,14 @@ class DefaultFirebaseOptions {
     projectId: 'luckez-9883e',
     storageBucket: 'luckez-9883e.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAWrkUzNVLGCKWNY8I0fpEvFA0xXhUPye0',
     appId: '1:475615354311:ios:6f5059e1f0a17640b40de2',
     messagingSenderId: '475615354311',
     projectId: 'luckez-9883e',
     storageBucket: 'luckez-9883e.firebasestorage.app',
-    iosClientId:
-        '475615354311-vhe7c3d2otnmcumkj41s9hmno5r1r20j.apps.googleusercontent.com',
+    androidClientId: '475615354311-k8ji58qaofjgphkfidrsa6vlq8foev1v.apps.googleusercontent.com',
+    iosClientId: '475615354311-vhe7c3d2otnmcumkj41s9hmno5r1r20j.apps.googleusercontent.com',
     iosBundleId: 'com.thisisyello.luckez',
   );
 }

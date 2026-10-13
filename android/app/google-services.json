@@ -37,6 +37,13 @@
             {
               "client_id": "475615354311-luooga4idohcktn87bgquihmfr1thtjm.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "475615354311-vhe7c3d2otnmcumkj41s9hmno5r1r20j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.thisisyello.luckez"
+              }
             }
           ]
         }
