@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 
 class ShellBottomNavigationBar extends StatelessWidget {
   const ShellBottomNavigationBar({
@@ -14,9 +15,9 @@ class ShellBottomNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      minimum: const EdgeInsets.fromLTRB(14, 0, 14, 8),
+      minimum: const EdgeInsets.fromLTRB(14, 0, 14, shellBottomBarMinimumGap),
       child: Container(
-        height: 68,
+        height: shellBottomBarHeight,
         decoration: BoxDecoration(
           color: surfaceColor.withValues(alpha: 0.88),
           borderRadius: BorderRadius.circular(22),
@@ -34,7 +35,7 @@ class ShellBottomNavigationBar extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: NavigationBar(
           selectedIndex: selectedIndex,
-          height: 68,
+          height: shellBottomBarHeight,
           backgroundColor: Colors.transparent,
           elevation: 0,
           indicatorColor: mainColor.withValues(alpha: 0.1),

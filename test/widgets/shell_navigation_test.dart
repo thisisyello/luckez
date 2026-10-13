@@ -1,9 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/shell_app_bar.dart';
 import 'package:luckez/widgets/shell_bottom_navigation_bar.dart';
 
 void main() {
+  for (final inset in [0.0, 24.0, 34.0]) {
+    testWidgets('Floating action clears navigation with safe inset $inset',
+        (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      tester.view.viewPadding = FakeViewPadding(bottom: inset);
+      tester.view.padding = FakeViewPadding(bottom: inset);
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewPadding);
+      addTearDown(tester.view.resetPadding);
+      double? extent;
+      await tester.pumpWidget(MaterialApp(
+        home: Builder(builder: (context) {
+          extent = shellBottomBarExtent(context);
+          return Scaffold(
+            extendBody: true,
+            body: Builder(builder: (context) {
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  Positioned(
+                    right: 20,
+                    bottom: extent! + shellFloatingActionGap,
+                    child: FloatingActionButton.extended(
+                      onPressed: () {},
+                      label: const Text('글쓰기'),
+                    ),
+                  ),
+                ],
+              );
+            }),
+            bottomNavigationBar: ShellBottomNavigationBar(
+              selectedIndex: 4,
+              onDestinationSelected: (_) {},
+            ),
+          );
+        }),
+      ));
+      final bar = tester.getRect(find.byType(ShellBottomNavigationBar));
+      final button = tester.getRect(find.byType(FloatingActionButton));
+      expect(bar.top - button.bottom, closeTo(shellFloatingActionGap, 0.01));
+      expect(extent, inset == 0 ? 76 : 68 + inset);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('App bar uses profile fallback and forwards button presses',
       (tester) async {
     var accountPresses = 0;

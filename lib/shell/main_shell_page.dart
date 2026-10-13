@@ -18,6 +18,7 @@ import 'package:luckez/pages/notification_page.dart';
 import 'package:luckez/pages/purchase_page.dart';
 import 'package:luckez/pages/stats_page.dart';
 import 'package:luckez/theme/app_colors.dart';
+import 'package:luckez/theme/app_layout.dart';
 import 'package:luckez/widgets/shell_app_bar.dart';
 import 'package:luckez/widgets/shell_bottom_navigation_bar.dart';
 
@@ -273,6 +274,7 @@ class _MainShellPageState extends State<MainShellPage> {
                   onDeleteSavedNumber: deleteSavedNumber,
                 ),
           CommunityPage(
+            bottomBarExtent: shellBottomBarExtent(context),
             currentUserId: currentUserId,
             currentUserName: _currentUserName,
             isAdmin: _isAdmin,

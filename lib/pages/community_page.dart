@@ -14,6 +14,7 @@ class CommunityPage extends StatelessWidget {
     required this.currentUserName,
     required this.isAdmin,
     required this.onLoginRequired,
+    required this.bottomBarExtent,
   });
 
   static final _communityRepository = CommunityRepository();
@@ -22,9 +23,12 @@ class CommunityPage extends StatelessWidget {
   final String? currentUserName;
   final bool isAdmin;
   final VoidCallback onLoginRequired;
+  final double bottomBarExtent;
 
   @override
   Widget build(BuildContext context) {
+    final buttonBottom = bottomBarExtent + shellFloatingActionGap;
+    final listBottomPadding = buttonBottom + 56 + shellFloatingActionGap;
     return ColoredBox(
       color: const Color(0xffF7F7F8),
       child: PageContentWidth(
@@ -34,7 +38,8 @@ class CommunityPage extends StatelessWidget {
               stream: _communityRepository.watchPosts(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const _CommunitySkeletonList();
+                  return _CommunitySkeletonList(
+                      bottomPadding: listBottomPadding);
                 }
 
                 if (snapshot.hasError) {
@@ -54,7 +59,7 @@ class CommunityPage extends StatelessWidget {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 160),
+                  padding: EdgeInsets.fromLTRB(20, 12, 20, listBottomPadding),
                   itemCount: posts.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
@@ -72,7 +77,7 @@ class CommunityPage extends StatelessWidget {
             ),
             Positioned(
               right: 20,
-              bottom: 96,
+              bottom: buttonBottom,
               child: FloatingActionButton.extended(
                 onPressed: () => _openEditor(context),
                 backgroundColor: mainColor,
@@ -352,12 +357,14 @@ class _CommunityStateMessage extends StatelessWidget {
 }
 
 class _CommunitySkeletonList extends StatelessWidget {
-  const _CommunitySkeletonList();
+  const _CommunitySkeletonList({required this.bottomPadding});
+
+  final double bottomPadding;
 
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 160),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPadding),
       itemCount: 8,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
       itemBuilder: (_, __) => const _CommunitySkeletonCard(),
