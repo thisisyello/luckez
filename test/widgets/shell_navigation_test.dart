@@ -54,13 +54,16 @@ void main() {
         (tester) async {
       tester.view.physicalSize = Size(width, 844);
       tester.view.devicePixelRatio = 1;
+      tester.view.viewPadding = const FakeViewPadding(bottom: 34);
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.view.resetViewPadding);
       var selected = 0;
       await tester.pumpWidget(MaterialApp(
         home: StatefulBuilder(builder: (context, setState) {
           return Scaffold(
-            extendBody: true,
+            extendBody: selected != 2,
+            body: const SizedBox.expand(key: ValueKey('shell-body')),
             appBar: ShellAppBar(
               photoUrl: null,
               unreadCount: 1,
@@ -90,6 +93,15 @@ void main() {
                 .widget<NavigationBar>(find.byType(NavigationBar))
                 .selectedIndex,
             index);
+        final bodyBottom =
+            tester.getRect(find.byKey(const ValueKey('shell-body'))).bottom;
+        final navigationTop =
+            tester.getRect(find.byType(ShellBottomNavigationBar)).top;
+        if (index == 2) {
+          expect(bodyBottom, lessThanOrEqualTo(navigationTop));
+        } else {
+          expect(bodyBottom, greaterThan(navigationTop));
+        }
         expect(tester.takeException(), isNull);
       }
     });

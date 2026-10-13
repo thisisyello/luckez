@@ -283,7 +283,7 @@ class _MainShellPageState extends State<MainShellPage> {
           ),
         ],
       ),
-      extendBody: true,
+      extendBody: selectedIndex != 2,
       bottomNavigationBar: ShellBottomNavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
