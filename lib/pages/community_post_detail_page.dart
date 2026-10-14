@@ -964,6 +964,8 @@ class _CommentInputState extends State<_CommentInput> {
   }
 }
 
+enum _CommentAction { edit, report, delete }
+
 class _CommentTile extends StatelessWidget {
   const _CommentTile({
     required this.comment,
@@ -1018,54 +1020,62 @@ class _CommentTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 2),
-              if (canEdit) ...[
-                const SizedBox(width: 2),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.edit_outlined,
-                    size: 16,
-                    color: greyColor,
-                  ),
-                  onPressed: onEdit,
-                ),
-              ],
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints(
-                  minWidth: 32,
-                  minHeight: 32,
-                ),
+              PopupMenuButton<_CommentAction>(
+                tooltip: '댓글 메뉴',
                 padding: EdgeInsets.zero,
                 icon: const Icon(
-                  Icons.flag_outlined,
-                  size: 16,
+                  Icons.more_horiz,
+                  size: 20,
                   color: greyColor,
                 ),
-                onPressed: onReport,
+                onSelected: (action) {
+                  switch (action) {
+                    case _CommentAction.edit:
+                      onEdit();
+                      break;
+                    case _CommentAction.report:
+                      onReport();
+                      break;
+                    case _CommentAction.delete:
+                      onDelete();
+                      break;
+                  }
+                },
+                itemBuilder: (_) => [
+                  if (canEdit)
+                    const PopupMenuItem(
+                      value: _CommentAction.edit,
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 18),
+                          SizedBox(width: 12),
+                          Text('수정'),
+                        ],
+                      ),
+                    ),
+                  const PopupMenuItem(
+                    value: _CommentAction.report,
+                    child: Row(
+                      children: [
+                        Icon(Icons.flag_outlined, size: 18),
+                        SizedBox(width: 12),
+                        Text('신고'),
+                      ],
+                    ),
+                  ),
+                  if (canDelete)
+                    const PopupMenuItem(
+                      value: _CommentAction.delete,
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, size: 18),
+                          SizedBox(width: 12),
+                          Text('삭제'),
+                        ],
+                      ),
+                    ),
+                ],
               ),
-              if (canDelete) ...[
-                const SizedBox(width: 2),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints(
-                    minWidth: 32,
-                    minHeight: 32,
-                  ),
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(
-                    Icons.close,
-                    size: 17,
-                    color: greyColor,
-                  ),
-                  onPressed: onDelete,
-                ),
-              ],
             ],
           ),
           const SizedBox(height: 6),
