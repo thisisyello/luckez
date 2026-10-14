@@ -36,6 +36,8 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
   final _commentController = TextEditingController();
   late CommunityPost _post;
   late int _likeCount;
+  late Stream<List<CommunityComment>> _commentsStream;
+  late Stream<bool> _isLikedStream;
   bool _isSubmittingComment = false;
 
   @override
@@ -43,6 +45,36 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
     super.initState();
     _post = widget.post;
     _likeCount = widget.post.likeCount;
+    _commentsStream = widget.communityRepository.watchComments(_post.id);
+    _watchPostLike();
+  }
+
+  void _watchPostLike() {
+    _isLikedStream = widget.communityRepository.watchPostLike(
+      postId: _post.id,
+      userId: widget.currentUserId,
+    );
+  }
+
+  @override
+  void didUpdateWidget(CommunityPostDetailPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final postChanged = oldWidget.post.id != widget.post.id;
+    final repositoryChanged =
+        oldWidget.communityRepository != widget.communityRepository;
+    if (postChanged) {
+      _post = widget.post;
+      _likeCount = widget.post.likeCount;
+      _commentController.clear();
+    }
+    if (postChanged || repositoryChanged) {
+      _commentsStream = widget.communityRepository.watchComments(_post.id);
+    }
+    if (postChanged ||
+        repositoryChanged ||
+        oldWidget.currentUserId != widget.currentUserId) {
+      _watchPostLike();
+    }
   }
 
   @override
@@ -98,18 +130,17 @@ class _CommunityPostDetailPageState extends State<CommunityPostDetailPage> {
               _PostContentCard(
                 post: _post,
                 formattedDate: _formatFullDate(_post.createdAt),
-                isLikedStream: widget.communityRepository.watchPostLike(
-                  postId: _post.id,
-                  userId: widget.currentUserId,
-                ),
+                isLikedStream: _isLikedStream,
                 likeCount: _likeCount,
                 onToggleLike: _toggleLike,
               ),
               const SizedBox(height: 14),
               StreamBuilder<List<CommunityComment>>(
-                stream: widget.communityRepository.watchComments(_post.id),
+                key: ValueKey(_post.id),
+                stream: _commentsStream,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (snapshot.connectionState == ConnectionState.waiting &&
+                      !snapshot.hasData) {
                     return const _CommentSectionSkeleton();
                   }
 
